@@ -1,0 +1,53 @@
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+# BraceWrapping: Set braces on the next line for various constructs
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: true  # 'true' makes 'if/else/for/while' statement braces go to a new line.
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+
+# IndentWidth: Specifies the indent width for line continuation.
+IndentWidth: 4
+
+# TabWidth: Set the width of tab characters in columns.
+TabWidth: 4
+
+# UseTab: Use tab for alignment.
+UseTab: Never
+
+# ColumnLimit: Set the maximum width for each line.
+ColumnLimit: 80
+
+# PointerAlignment: Align pointer to the left.
+PointerAlignment: Left
+
+# IncludeBlocks: Preserve the grouping of include statements.
+IncludeBlocks: Preserve
+
+# AllowShortIfStatementsOnASingleLine: If statements can be short.
+AllowShortIfStatementsOnASingleLine: false
+
+# Space configuration
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+SpacesInParentheses: false
+SpacesInAngles: false
+
+# Alignment of consecutive assignments
+AlignConsecutiveAssignments: true
+
+# Alignment of consecutive declarations
+AlignConsecutiveDeclarations: true
+
+# Max consecutive empty lines to keep.
+MaxEmptyLinesToKeep: 1
+

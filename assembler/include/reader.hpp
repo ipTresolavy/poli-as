@@ -5,9 +5,10 @@
 class Reader {
   public:
     explicit Reader(std::string& input);
-    char nextChar();
-    char peekNextChar();
-    void consumeWhitespace();
+    char        nextChar();
+    char        peekNextChar();
+    void        consumeWhitespace();
+    std::string consumeToWhitespace();
 
   private:
     int         position = 0;

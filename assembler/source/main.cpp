@@ -1,4 +1,5 @@
 #include "../include/reader.hpp"
+#include "../include/tokenizer.hpp"
 #include <fstream>
 #include <iostream>
 #include <ostream>
@@ -9,6 +10,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: " << argv[0] << " <source file>" << std::endl;
         return 1;
     }
+
     std::string filename = argv[1];
 
     std::ifstream inputFile(filename);
@@ -22,15 +24,17 @@ int main(int argc, char* argv[]) {
     std::string line;
     while (getline(inputFile, line)) {
         input += line;
+        input += '\n';
     }
 
     inputFile.close();
 
-    Reader reader(input);
+    Reader    reader(input);
+    Tokenizer tokenizer(reader);
 
-    while (reader.peekNextChar() != '\0') {
-        std::cout << reader.nextChar();
-    }
+    Token token = tokenizer.nextToken();
+
+    std::cout << "Token: " << (token.type == TokenType::REGISTER);
 
     return 0;
 }

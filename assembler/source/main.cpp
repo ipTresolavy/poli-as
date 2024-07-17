@@ -34,7 +34,5 @@ int main(int argc, char* argv[]) {
 
     Token token = tokenizer.nextToken();
 
-    std::cout << "Token: " << (token.type == TokenType::REGISTER);
-
     return 0;
 }

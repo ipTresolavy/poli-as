@@ -1,0 +1,17 @@
+mov r1, #0
+
+ini:
+
+mov r2, #0
+
+add r1, r1, #4
+
+subs r2, r1, #12
+
+beq =fim
+
+b ini
+
+fim:
+
+b fim

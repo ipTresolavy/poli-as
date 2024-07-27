@@ -1,17 +1,10 @@
-mov r1, #0
+teste:
+mov r0, r0
+testa:
+mov r0, r0
+testb:
+mov r0, r0
+testc:
+mov r0, r0
 
-ini:
 
-mov r2, #0
-
-add r1, r1, #4
-
-subs r2, r1, #12
-
-beq =fim
-
-b ini
-
-fim:
-
-b fim

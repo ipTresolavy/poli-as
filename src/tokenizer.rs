@@ -20,6 +20,10 @@ impl Tokenizer {
         Tokenizer { reader }
     }
 
+    pub fn is_eof(&self) -> bool {
+        self.reader.is_eof()
+    }
+
     pub fn consume_line(&mut self) -> Vec<Token> {
         self.reader.consume_whitespace();
 

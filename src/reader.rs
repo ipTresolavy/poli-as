@@ -12,6 +12,10 @@ impl Reader {
         Reader { file, position: 0 }
     }
 
+    pub fn is_eof(&self) -> bool {
+        self.peek_char().is_none()
+    }
+
     pub fn consume_whitespace(&mut self) {
         while let Some(c) = self.peek_char() {
             if !self.is_whitespace(c) {
@@ -77,7 +81,7 @@ impl Reader {
         c.is_none() || c.unwrap() == '-' || c.unwrap() == ','
     }
 
-    pub fn peek_char(&mut self) -> Option<char> {
+    pub fn peek_char(&self) -> Option<char> {
         self.read_at_position(self.position)
     }
 

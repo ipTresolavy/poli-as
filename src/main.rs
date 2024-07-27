@@ -1,3 +1,4 @@
+use lexer::symbolizer::{self, Symbolizer};
 use reader::Reader;
 
 use crate::tokenizer::Tokenizer;
@@ -11,10 +12,11 @@ fn main() {
     let mut reader = Reader::new("hello.txt");
 
     reader.consume_whitespace();
-    let mut tokenizer = Tokenizer::new(reader);
+    let tokenizer = Tokenizer::new(reader);
 
-    for _ in 0..10 {
-        let line_tokens = tokenizer.consume_line();
-        println!("{:?}", line_tokens);
-    }
+    let mut symbolizer = Symbolizer::new(tokenizer);
+
+    symbolizer.symbolize();
+
+    println!("{:?}", symbolizer.symbol_table);
 }

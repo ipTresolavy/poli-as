@@ -12,6 +12,10 @@ impl Reader {
         Reader { file, position: 0 }
     }
 
+    pub fn reset(&mut self) {
+        self.position = 0;
+    }
+
     pub fn is_eof(&self) -> bool {
         self.peek_char().is_none()
     }

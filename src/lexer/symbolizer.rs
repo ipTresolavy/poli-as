@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::tokenizer::{self, Tokenizer};
+use crate::tokenizer::Tokenizer;
 
 #[derive(Hash, Eq, PartialEq, Debug)]
 pub struct Symbol {
@@ -76,7 +76,9 @@ impl Symbolizer {
 
         self.symbol_table.0.insert(symbol, address);
     }
-    fn get_address(&self, symbol: &Symbol) -> Option<&Address> {
-        self.symbol_table.0.get(symbol)
+    pub fn get_address(&self, symbol: &str) -> Option<&Address> {
+        let symbol = Symbol::new(symbol.to_string());
+
+        self.symbol_table.0.get(&symbol)
     }
 }

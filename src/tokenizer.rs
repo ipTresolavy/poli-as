@@ -41,6 +41,10 @@ impl Tokenizer {
         line_tokens
     }
 
+    pub fn reset(&mut self) {
+        self.reader.reset();
+    }
+
     fn split_at_separators(&self, line: &str) -> Vec<String> {
         // Another day another regex i want to kill myself over
         let re = Regex::new(r"(\d+)|(r\d+)|(\{|\})|(\[|\])|(-)|(!)|(=)|(\.[a-zA-Z]+)|(#0x\d+|#0b\d+|#0d\d+|#\d+)|([a-zA-Z]+:)|([a-zA-Z]+)").unwrap();

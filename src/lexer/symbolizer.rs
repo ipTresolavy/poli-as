@@ -52,20 +52,19 @@ impl Symbolizer {
         let tokens = self.tokenizer.consume_line();
         use crate::token::Token;
 
-        for token in tokens {
-            match token {
-                Token::LABEL(label) => {
-                    let symbol = Symbol::new(label.value);
-                    let address = Address::new(self.addr);
-                    self.add_symbol(symbol, address);
-                    return;
-                }
-                Token::INSTRUCTION(_) => {
-                    self.addr += 4;
-                    return;
-                }
-                _ => {}
+        for token in &tokens {
+            if let Token::LABEL(label) = token {
+                let symbol = Symbol::new(label.value.clone());
+                let address = Address::new(self.addr);
+                self.add_symbol(symbol, address);
             }
+        }
+
+        if tokens
+            .iter()
+            .any(|token| matches!(token, Token::INSTRUCTION(_)))
+        {
+            self.addr += 4;
         }
     }
 

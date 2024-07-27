@@ -52,10 +52,7 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {
                 panic!("Label {} not found in symbol table", label);
             }
 
-            println!("#{}", &address.unwrap().value.to_string());
             let immediate = Immediate::new(address.unwrap().value.to_string()).unwrap();
-
-            println!("Replacing label {} with immediate {:?}", label, immediate);
 
             *token = Token::IMMEDIATE(immediate);
         }

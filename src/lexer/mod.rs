@@ -1,5 +1,5 @@
 use crate::{
-    token::{immediate::Immediate, Token},
+    token::{immediate::Immediate, instruction_name::InstructionName, Token},
     tokenizer::Tokenizer,
 };
 
@@ -38,10 +38,56 @@ impl Lexer {
         // first replace any labels with their addresses
         replace_label_ref(&mut tokens, &self.symbol_table);
 
-        for token in tokens {
-            println!("{:?}", token);
+        let index = tokens
+            .iter()
+            .position(|token| matches!(token, Token::INSTRUCTION(_)));
+
+        if let Some(index) = index {
+            let (instruction, operands) = tokens.split_at_mut(index + 1);
+            let instruction = instruction.last().unwrap();
+            if let Token::INSTRUCTION(instruction) = instruction {
+                if is_logical_arithmatic_op(&instruction.value) {
+                    // parse_logical_arithmatic_op(operands);
+                } else {
+                    panic!("Instruction not supported")
+                }
+            }
         }
     }
+}
+
+fn parse_logical_arithmatic_op(operands: &[Token]) {
+    match operands {
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n)] => {
+            // parse_reg_imm_op(operands);
+        }
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm)] => {
+            // parse_reg_reg_op(operands);
+        }
+        _ => panic!("Invalid operands"),
+    }
+}
+
+fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
+    matches!(
+        token,
+        InstructionName::AND
+            | InstructionName::EOR
+            | InstructionName::SUB
+            | InstructionName::RSB
+            | InstructionName::ADD
+            | InstructionName::ADC
+            | InstructionName::SBC
+            | InstructionName::RSC
+            | InstructionName::TST
+            | InstructionName::TEQ
+            | InstructionName::CMP
+            | InstructionName::CMN
+            | InstructionName::ORR
+            | InstructionName::MOV
+            | InstructionName::BIC
+            | InstructionName::MVN
+    )
 }
 
 fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {

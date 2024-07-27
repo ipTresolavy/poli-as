@@ -2,8 +2,11 @@
 
 use crate::token::{immediate::Immediate, register::Register};
 
+use super::barrel_shifter::BarrelShifterExpression;
+
 pub struct TwoRegsLiteralExpression {
     pub reg_d: Register,
     pub reg_m: Register,
     pub literal: Immediate,
+    pub barrel_shifter: Option<BarrelShifterExpression>,
 }

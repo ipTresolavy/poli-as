@@ -1,8 +1,8 @@
 use reader::Reader;
-use token::Token;
 
 use crate::tokenizer::Tokenizer;
 
+pub mod lexer;
 pub mod reader;
 pub mod token;
 pub mod tokenizer;

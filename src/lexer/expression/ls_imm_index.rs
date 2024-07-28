@@ -3,7 +3,7 @@ use crate::token::{immediate::Immediate, register::Register};
 
 #[derive(Debug)]
 pub struct PreIndex {
-    write_back: bool,
+    pub write_back: bool,
 }
 
 #[derive(Debug)]
@@ -14,14 +14,14 @@ pub enum IndexMode {
 }
 
 #[derive(Debug)]
-pub struct LoadStoreExpression {
+pub struct LoadStoreImmediateExpression {
     pub destination: Register,
     pub base: Register,
     pub offset: Option<Immediate>,
     pub index_mode: IndexMode,
 }
 
-impl LoadStoreExpression {
+impl LoadStoreImmediateExpression {
     pub fn new(
         destination: Register,
         register: Register,

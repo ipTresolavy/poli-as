@@ -1,6 +1,6 @@
-use std::num::ParseIntError;
-
-use crate::lexer::expression::ls_index::{IndexMode, LoadStoreExpression};
+use crate::lexer::expression::barrel_shifter::BarrelShifterExpression;
+use crate::lexer::expression::ls_imm_index::{IndexMode, LoadStoreImmediateExpression, PreIndex};
+use crate::lexer::expression::ls_reg_index::LoadStoreRegisterExpression;
 use crate::{
     lexer::expression::Expression,
     token::{instruction_name::InstructionName, Token},
@@ -44,7 +44,7 @@ pub fn parse_load_store_op(instruction: &InstructionName, operands: &[Token]) ->
 fn parse_single_op(operands: &[Token]) -> Expression {
     match operands {
         [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN] => {
-            Expression::LoadStore(LoadStoreExpression::new(
+            Expression::LoadStoreImmediate(LoadStoreImmediateExpression::new(
                 dest.to_owned(),
                 base.to_owned(),
                 None,
@@ -52,15 +52,87 @@ fn parse_single_op(operands: &[Token]) -> Expression {
             ))
         }
 
-        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN] => {
-            Expression::LoadStore(LoadStoreExpression::new(
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN, Token::IMMEDIATE(imm)] => {
+            Expression::LoadStoreImmediate(LoadStoreImmediateExpression::new(
                 dest.to_owned(),
                 base.to_owned(),
-                None,
-                IndexMode::None,
+                Some(imm.clone()),
+                IndexMode::Post,
             ))
         }
-        _ => todo!(),
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::IMMEDIATE(imm), Token::RPAREN] => {
+            Expression::LoadStoreImmediate(LoadStoreImmediateExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                Some(imm.clone()),
+                IndexMode::Pre(PreIndex { write_back: false }),
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::IMMEDIATE(imm), Token::RPAREN, Token::BANG] => {
+            Expression::LoadStoreImmediate(LoadStoreImmediateExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                Some(imm.clone()),
+                IndexMode::Pre(PreIndex { write_back: true }),
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN, Token::REGISTER(offset)] => {
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                IndexMode::Post,
+                None,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN, Token::REGISTER(offset), rest @ ..] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
+
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                IndexMode::Post,
+                barrel_shifter,
+            ))
+        }
+        // TODO: Support negative index mode
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::REGISTER(offset), Token::RPAREN] => {
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                IndexMode::Pre(PreIndex { write_back: false }),
+                None,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::REGISTER(offset), rest @ .., Token::RPAREN, Token::BANG] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
+
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                IndexMode::Pre(PreIndex { write_back: true }),
+                barrel_shifter,
+            ))
+        }
+
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::REGISTER(offset), rest @ .., Token::RPAREN] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
+
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                IndexMode::Pre(PreIndex { write_back: false }),
+                barrel_shifter,
+            ))
+        }
+        _ => panic!("Invalid operands"),
     }
 }
 

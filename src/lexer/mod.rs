@@ -8,7 +8,10 @@ use self::{
         reg_literal::RegLiteralExpression, three_regs::ThreeRegsExpression,
         two_regs_literal::TwoRegsLiteralExpression, Expression,
     },
-    operations::branch_op::{is_branch_op, parse_branch_op},
+    operations::{
+        branch_op::{is_branch_op, parse_branch_op},
+        load_store_op::{is_load_store_op, parse_load_store_op},
+    },
     symbolizer::Symbolizer,
 };
 
@@ -60,6 +63,10 @@ impl Lexer {
                     parse_move_op(operands);
                 } else if is_branch_op(&instruction.value) {
                     parse_branch_op(&instruction.value, operands);
+                } else if is_load_store_op(&instruction.value) {
+                    let expression = parse_load_store_op(&instruction.value, operands);
+
+                    println!("{:?}", expression);
                 } else {
                     panic!("Instruction not supported")
                 }

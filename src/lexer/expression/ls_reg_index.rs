@@ -3,7 +3,7 @@ use crate::token::register::Register;
 use super::{barrel_shifter::BarrelShifterExpression, ls_imm_index::IndexMode};
 // Determines wether pre os post indexing is used
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct LoadStoreRegisterExpression {
     pub destination: Register,
     pub base: Register,

@@ -3,6 +3,7 @@ use reader::Reader;
 
 use crate::tokenizer::Tokenizer;
 
+pub mod emulator;
 pub mod lexer;
 pub mod reader;
 pub mod token;
@@ -24,5 +25,10 @@ fn main() {
 
     let mut lexer = lexer::Lexer::new(tokenizer, symbolizer);
 
-    lexer.parse();
+    let program = lexer.parse();
+
+    let mut cpu = emulator::cpu::Cpu::new();
+
+    cpu.load_program(program);
+    cpu.run();
 }

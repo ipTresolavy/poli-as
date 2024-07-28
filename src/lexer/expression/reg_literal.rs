@@ -2,7 +2,7 @@
 
 use crate::token::{immediate::Immediate, register::Register};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RegLiteralExpression {
     pub register: Register,
     pub literal: Immediate,

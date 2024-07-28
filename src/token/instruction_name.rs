@@ -1,6 +1,6 @@
 use regex::Regex;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum InstructionName {
     ADC,
     ADCS,

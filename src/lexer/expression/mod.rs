@@ -9,7 +9,7 @@ pub mod three_regs;
 pub mod two_regs;
 pub mod two_regs_literal;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     ThreeRegs(three_regs::ThreeRegsExpression),
     TwoRegs(two_regs::TwoRegsExpression),

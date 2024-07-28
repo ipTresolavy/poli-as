@@ -4,7 +4,7 @@ use crate::token::register::Register;
 
 use super::barrel_shifter::BarrelShifterExpression;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ThreeRegsExpression {
     pub reg_d: Register,
     pub reg_m: Register,

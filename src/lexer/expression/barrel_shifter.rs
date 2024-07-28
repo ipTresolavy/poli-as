@@ -1,6 +1,9 @@
-use crate::token::{instruction_name::InstructionName, register::Register, Token};
+use crate::{
+    emulator::regs::CpuRegisters,
+    token::{instruction_name::InstructionName, register::Register, Token},
+};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum BarrelShifterOperation {
     LSL,
     LSR,
@@ -8,13 +11,13 @@ pub enum BarrelShifterOperation {
     ROR,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum BarrealShifterShiftAmount {
     Register(Register),
     Number(u8),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct BarrelShifterExpression {
     pub operation: BarrelShifterOperation,
     pub shift_amount: BarrealShifterShiftAmount,
@@ -49,5 +52,25 @@ impl BarrelShifterExpression {
             operation,
             shift_amount,
         })
+    }
+
+    pub fn apply(&self, value: u32, regs: &CpuRegisters) -> u32 {
+        match self.shift_amount {
+            BarrealShifterShiftAmount::Number(imm) => match self.operation {
+                BarrelShifterOperation::LSL => value << imm,
+                BarrelShifterOperation::LSR => value >> imm,
+                BarrelShifterOperation::ASR => ((value as i32) >> imm) as u32,
+                BarrelShifterOperation::ROR => value.rotate_right(imm as u32),
+            },
+            BarrealShifterShiftAmount::Register(num) => {
+                let shift_amount = regs.get(num.to_num()) & 0xFF;
+                match self.operation {
+                    BarrelShifterOperation::LSL => value << shift_amount,
+                    BarrelShifterOperation::LSR => value >> shift_amount,
+                    BarrelShifterOperation::ASR => ((value as i32) >> shift_amount) as u32,
+                    BarrelShifterOperation::ROR => value.rotate_right(shift_amount),
+                }
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ use crate::{
 };
 
 use self::{
+    cpu_op::CpuOperation,
     expression::{
         reg_literal::RegLiteralExpression, three_regs::ThreeRegsExpression,
         two_regs_literal::TwoRegsLiteralExpression, Expression,
@@ -15,6 +16,7 @@ use self::{
     symbolizer::Symbolizer,
 };
 
+pub mod cpu_op;
 pub mod expression;
 pub mod machine_code_builder;
 pub mod operations;
@@ -33,17 +35,23 @@ impl Lexer {
         }
     }
 
-    pub fn parse(&mut self) {
+    pub fn parse(&mut self) -> Vec<CpuOperation> {
+        let mut operations = Vec::new();
         while !self.tokenizer.is_eof() {
-            self.parse_line();
+            let op = self.parse_line();
+
+            if let Some(op) = op {
+                operations.push(op);
+            }
         }
+        operations
     }
 
-    fn parse_line(&mut self) {
+    fn parse_line(&mut self) -> Option<CpuOperation> {
         let mut tokens = self.tokenizer.consume_line();
 
         if tokens.is_empty() {
-            return;
+            return None;
         }
 
         // first replace any labels with their addresses
@@ -58,20 +66,23 @@ impl Lexer {
             let instruction = instruction.last().unwrap();
             if let Token::INSTRUCTION(instruction) = instruction {
                 if is_logical_arithmatic_op(&instruction.value) {
-                    parse_logical_arithmatic_op(operands);
+                    let expr = parse_logical_arithmatic_op(operands);
+                    return Some(CpuOperation::new(*instruction, expr));
                 } else if is_move_op(&instruction.value) {
-                    parse_move_op(operands);
+                    let expr = parse_move_op(operands);
+                    return Some(CpuOperation::new(*instruction, expr));
                 } else if is_branch_op(&instruction.value) {
-                    parse_branch_op(&instruction.value, operands);
+                    let expr = parse_branch_op(&instruction.value, operands);
+                    return Some(CpuOperation::new(*instruction, expr));
                 } else if is_load_store_op(&instruction.value) {
-                    let expression = parse_load_store_op(&instruction.value, operands);
-
-                    println!("{:?}", expression);
+                    let expr = parse_load_store_op(&instruction.value, operands);
+                    return Some(CpuOperation::new(*instruction, expr));
                 } else {
                     panic!("Instruction not supported")
                 }
             }
         }
+        None
     }
 }
 
@@ -112,7 +123,7 @@ fn parse_move_op(operands: &[Token]) -> Expression {
     }
 }
 
-fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
+pub fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
     matches!(
         token,
         InstructionName::AND
@@ -125,15 +136,16 @@ fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
             | InstructionName::RSC
             | InstructionName::TST
             | InstructionName::TEQ
-            | InstructionName::CMP
-            | InstructionName::CMN
             | InstructionName::ORR
             | InstructionName::BIC
     )
 }
 
-fn is_move_op(token: &InstructionName) -> bool {
-    matches!(token, InstructionName::MOV | InstructionName::MVN)
+pub fn is_move_op(token: &InstructionName) -> bool {
+    matches!(
+        token,
+        InstructionName::MOV | InstructionName::MVN | InstructionName::CMP | InstructionName::CMN
+    )
 }
 
 fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {

@@ -2,7 +2,7 @@
 
 use crate::token::register::Register;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct TwoRegsExpression {
     pub reg_d: Register,
     pub reg_m: Register,

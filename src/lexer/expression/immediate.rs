@@ -1,6 +1,6 @@
 use crate::token::immediate::Immediate;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImmediateExpression {
     pub literal: Immediate,
 }

@@ -1,6 +1,6 @@
 use super::instruction_name::InstructionName;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Instruction {
     pub value: InstructionName,
     pub save_register: bool,
@@ -30,7 +30,7 @@ impl Instruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ConditionCode {
     Eq, // Equal
     Ne, // Not equal

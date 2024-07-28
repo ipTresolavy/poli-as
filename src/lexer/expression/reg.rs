@@ -1,6 +1,6 @@
 use crate::token::register::Register;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct RegExpression {
     pub register: Register,
 }

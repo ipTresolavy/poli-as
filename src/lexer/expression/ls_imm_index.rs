@@ -1,19 +1,19 @@
 use crate::token::{immediate::Immediate, register::Register};
 // Determines wether pre os post indexing is used
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct PreIndex {
     pub write_back: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum IndexMode {
     Pre(PreIndex),
     Post,
     None,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoadStoreImmediateExpression {
     pub destination: Register,
     pub base: Register,

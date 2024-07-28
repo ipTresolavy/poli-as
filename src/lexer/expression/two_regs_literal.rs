@@ -4,7 +4,7 @@ use crate::token::{immediate::Immediate, register::Register};
 
 use super::barrel_shifter::BarrelShifterExpression;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TwoRegsLiteralExpression {
     pub reg_d: Register,
     pub reg_m: Register,

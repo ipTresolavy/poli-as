@@ -1,6 +1,6 @@
 use crate::token::register::Register;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoadStoreMultipleExpression {
     pub base: Register,
     pub registers: Vec<Register>,

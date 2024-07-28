@@ -3,7 +3,7 @@ use crate::{
     tokenizer::Tokenizer,
 };
 
-use self::symbolizer::Symbolizer;
+use self::{expression::three_regs::ThreeRegsExpression, symbolizer::Symbolizer};
 
 pub mod expression;
 pub mod machine_code_builder;
@@ -58,8 +58,9 @@ impl Lexer {
 
 fn parse_logical_arithmatic_op(operands: &[Token]) {
     match operands {
-        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n)] => {
-            // parse_reg_imm_op(operands);
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n), rest @ ..] => {
+            let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);
+            ThreeRegsExpression::new(reg_d.to_owned(), reg_m.to_owned(), reg_n.to_owned(), None);
         }
         [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm)] => {
             // parse_reg_reg_op(operands);

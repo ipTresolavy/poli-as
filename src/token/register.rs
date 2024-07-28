@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum RegisterNumbers {
     ZERO,
     ONE,
@@ -63,7 +63,7 @@ impl RegisterNumbers {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Register {
     pub register: RegisterNumbers,
 }

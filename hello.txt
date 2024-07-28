@@ -1,5 +1,4 @@
-teste:
-mov r0, r0
+teste: mov r0, r0
 testa:
 mov r0, r0
 testb:

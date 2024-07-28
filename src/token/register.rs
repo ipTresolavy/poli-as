@@ -72,4 +72,12 @@ impl Register {
     pub fn new(register: RegisterNumbers) -> Register {
         Register { register }
     }
+
+    pub fn to_num(&self) -> u8 {
+        self.register.to_num()
+    }
+
+    pub fn from_num(num: u8) -> Option<Register> {
+        RegisterNumbers::from_num(num as u32).map(|register| Register { register })
+    }
 }

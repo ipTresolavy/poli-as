@@ -1,6 +1,8 @@
 use crate::lexer::expression::barrel_shifter::BarrelShifterExpression;
 use crate::lexer::expression::ls_imm_index::{IndexMode, LoadStoreImmediateExpression, PreIndex};
+use crate::lexer::expression::ls_multiple::LoadStoreMultipleExpression;
 use crate::lexer::expression::ls_reg_index::LoadStoreRegisterExpression;
+use crate::token::register::Register;
 use crate::{
     lexer::expression::Expression,
     token::{instruction_name::InstructionName, Token},
@@ -137,5 +139,60 @@ fn parse_single_op(operands: &[Token]) -> Expression {
 }
 
 fn parse_multiple_op(operands: &[Token]) -> Expression {
-    todo!()
+    match operands {
+        [Token::REGISTER(dest), Token::LBRACE, rest @ .., Token::RBRACE] => {
+            let registers = parse_multiple_regs(rest);
+            Expression::LoadStoreMultiple(LoadStoreMultipleExpression::new(
+                dest.to_owned(),
+                registers,
+                false,
+            ))
+        }
+
+        [Token::REGISTER(dest), Token::BANG, Token::LBRACE, rest @ .., Token::RBRACE] => {
+            let registers = parse_multiple_regs(rest);
+            Expression::LoadStoreMultiple(LoadStoreMultipleExpression::new(
+                dest.to_owned(),
+                registers,
+                true,
+            ))
+        }
+        _ => panic!("Invalid operands"),
+    }
+}
+
+fn parse_multiple_regs(operands: &[Token]) -> Vec<Register> {
+    let mut registers = Vec::new();
+
+    let mut i = 0;
+    while i < operands.len() {
+        if let Token::REGISTER(reg) = &operands[i] {
+            if let Some(Token::MINUS) = operands.get(i + 1) {
+                if let Some(Token::REGISTER(end)) = operands.get(i + 2) {
+                    let regs = generate_reg_range(reg, end);
+
+                    registers.extend(regs);
+
+                    i += 3;
+                    continue;
+                }
+            }
+            registers.push(reg.to_owned());
+        }
+        i += 1;
+    }
+
+    registers
+}
+
+fn generate_reg_range(start: &Register, end: &Register) -> Vec<Register> {
+    let start = start.to_num();
+    let end = end.to_num();
+    if start > end {
+        panic!("Invalid register range");
+    }
+
+    (start..=end)
+        .map(|num| Register::from_num(num).unwrap())
+        .collect()
 }

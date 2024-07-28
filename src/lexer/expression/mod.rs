@@ -1,5 +1,6 @@
 pub mod barrel_shifter;
 pub mod immediate;
+pub mod ls_index;
 pub mod reg;
 pub mod reg_literal;
 pub mod three_regs;
@@ -14,4 +15,5 @@ pub enum Expression {
     RegLiteral(reg_literal::RegLiteralExpression),
     Immediate(immediate::ImmediateExpression),
     Register(reg::RegExpression),
+    LoadStore(ls_index::LoadStoreExpression),
 }

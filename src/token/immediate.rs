@@ -1,11 +1,11 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Immediate {
     pub value: String,
     pub base: ImmediateBase,
     pub number: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum ImmediateBase {
     HEX,
     DEC,

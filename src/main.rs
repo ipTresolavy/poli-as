@@ -1,4 +1,4 @@
-use lexer::symbolizer::{self, Symbolizer};
+use lexer::symbolizer::Symbolizer;
 use reader::Reader;
 
 use crate::tokenizer::Tokenizer;

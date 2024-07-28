@@ -3,7 +3,12 @@ use crate::{
     tokenizer::Tokenizer,
 };
 
-use self::{expression::three_regs::ThreeRegsExpression, symbolizer::Symbolizer};
+use self::{
+    expression::{
+        three_regs::ThreeRegsExpression, two_regs_literal::TwoRegsLiteralExpression, Expression,
+    },
+    symbolizer::Symbolizer,
+};
 
 pub mod expression;
 pub mod machine_code_builder;
@@ -47,7 +52,8 @@ impl Lexer {
             let instruction = instruction.last().unwrap();
             if let Token::INSTRUCTION(instruction) = instruction {
                 if is_logical_arithmatic_op(&instruction.value) {
-                    // parse_logical_arithmatic_op(operands);
+                    let test = parse_logical_arithmatic_op(operands);
+                    println!("{:?}", test);
                 } else {
                     panic!("Instruction not supported")
                 }
@@ -56,14 +62,26 @@ impl Lexer {
     }
 }
 
-fn parse_logical_arithmatic_op(operands: &[Token]) {
+// Keep in mind we make a copy of the expressions in memory
+fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
     match operands {
         [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n), rest @ ..] => {
             let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);
-            ThreeRegsExpression::new(reg_d.to_owned(), reg_m.to_owned(), reg_n.to_owned(), None);
+            Expression::ThreeRegs(ThreeRegsExpression::new(
+                reg_d.to_owned(),
+                reg_m.to_owned(),
+                reg_n.to_owned(),
+                barrel_shifter,
+            ))
         }
-        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm)] => {
-            // parse_reg_reg_op(operands);
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm), rest @ ..] => {
+            let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);
+            Expression::TwoRegsLiteral(TwoRegsLiteralExpression::new(
+                reg_d.to_owned(),
+                reg_m.to_owned(),
+                imm.clone(),
+                barrel_shifter,
+            ))
         }
         _ => panic!("Invalid operands"),
     }

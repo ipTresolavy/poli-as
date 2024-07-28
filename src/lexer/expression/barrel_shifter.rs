@@ -1,5 +1,6 @@
 use crate::token::{instruction_name::InstructionName, register::Register, Token};
 
+#[derive(Debug)]
 pub enum BarrelShifterOperation {
     LSL,
     LSR,
@@ -7,11 +8,13 @@ pub enum BarrelShifterOperation {
     ROR,
 }
 
+#[derive(Debug)]
 pub enum BarrealShifterShiftAmount {
     Register(Register),
     Number(u8),
 }
 
+#[derive(Debug)]
 pub struct BarrelShifterExpression {
     pub operation: BarrelShifterOperation,
     pub shift_amount: BarrealShifterShiftAmount,

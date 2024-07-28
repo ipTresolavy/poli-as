@@ -8,11 +8,13 @@ use self::{
         reg_literal::RegLiteralExpression, three_regs::ThreeRegsExpression,
         two_regs_literal::TwoRegsLiteralExpression, Expression,
     },
+    operations::branch_op::{is_branch_op, parse_branch_op},
     symbolizer::Symbolizer,
 };
 
 pub mod expression;
 pub mod machine_code_builder;
+pub mod operations;
 pub mod symbolizer;
 
 pub struct Lexer {
@@ -56,6 +58,8 @@ impl Lexer {
                     parse_logical_arithmatic_op(operands);
                 } else if is_move_op(&instruction.value) {
                     parse_move_op(operands);
+                } else if is_branch_op(&instruction.value) {
+                    parse_branch_op(&instruction.value, operands);
                 } else {
                     panic!("Instruction not supported")
                 }

@@ -5,7 +5,8 @@ use crate::{
 
 use self::{
     expression::{
-        three_regs::ThreeRegsExpression, two_regs_literal::TwoRegsLiteralExpression, Expression,
+        reg_literal::RegLiteralExpression, three_regs::ThreeRegsExpression,
+        two_regs_literal::TwoRegsLiteralExpression, Expression,
     },
     symbolizer::Symbolizer,
 };
@@ -52,8 +53,9 @@ impl Lexer {
             let instruction = instruction.last().unwrap();
             if let Token::INSTRUCTION(instruction) = instruction {
                 if is_logical_arithmatic_op(&instruction.value) {
-                    let test = parse_logical_arithmatic_op(operands);
-                    println!("{:?}", test);
+                    parse_logical_arithmatic_op(operands);
+                } else if is_move_op(&instruction.value) {
+                    parse_move_op(operands);
                 } else {
                     panic!("Instruction not supported")
                 }
@@ -87,6 +89,18 @@ fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
     }
 }
 
+fn parse_move_op(operands: &[Token]) -> Expression {
+    match operands {
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m)] => Expression::TwoRegs(
+            expression::two_regs::TwoRegsExpression::new(reg_d.to_owned(), reg_m.to_owned()),
+        ),
+        [Token::REGISTER(reg_d), Token::IMMEDIATE(imm)] => {
+            Expression::RegLiteral(RegLiteralExpression::new(reg_d.to_owned(), imm.clone()))
+        }
+        _ => panic!("Invalid operands"),
+    }
+}
+
 fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
     matches!(
         token,
@@ -103,10 +117,12 @@ fn is_logical_arithmatic_op(token: &InstructionName) -> bool {
             | InstructionName::CMP
             | InstructionName::CMN
             | InstructionName::ORR
-            | InstructionName::MOV
             | InstructionName::BIC
-            | InstructionName::MVN
     )
+}
+
+fn is_move_op(token: &InstructionName) -> bool {
+    matches!(token, InstructionName::MOV | InstructionName::MVN)
 }
 
 fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {

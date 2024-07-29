@@ -8,6 +8,7 @@ pub mod lexer;
 pub mod reader;
 pub mod token;
 pub mod tokenizer;
+pub mod utils;
 
 fn main() {
     let mut reader = Reader::new("hello.txt");

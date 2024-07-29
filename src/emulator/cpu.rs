@@ -5,6 +5,7 @@ use crate::{
         is_logical_arithmatic_op, is_move_op,
     },
     token::instruction_name::InstructionName,
+    utils::negate_u32,
 };
 
 use super::{instruction_mem::InstructionMemory, memory::Heap, regs::CpuRegisters};
@@ -93,7 +94,17 @@ impl Cpu {
             match expr {
                 Expression::TwoRegs(expr) => {
                     let rm = self.regs.get(expr.reg_m.to_num());
-                    self.regs.set(expr.reg_d.to_num(), rm);
+                    match istr.value {
+                        InstructionName::MOV => {
+                            self.regs.set(expr.reg_d.to_num(), rm);
+                        }
+                        InstructionName::MVN => {
+                            self.regs.set(expr.reg_d.to_num(), negate_u32(rm));
+                        }
+                        _ => {
+                            panic!("Invalid instruction")
+                        }
+                    }
                 }
                 _ => {
                     panic!("Invalid expression")

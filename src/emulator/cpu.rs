@@ -4,7 +4,7 @@ use crate::{
         expression::{barrel_shifter::BarrelShifterExpression, Expression},
         is_logical_arithmatic_op, is_move_op,
     },
-    token::instruction_name::InstructionName,
+    token::{instruction::Instruction, instruction_name::InstructionName},
     utils::negate_u32,
 };
 
@@ -54,42 +54,38 @@ impl Cpu {
         }
     }
 
-    fn cycle(&mut self) {
-        let op = self.next_instruction();
+    fn perform_logic_op(&mut self, istr: Instruction, expr: Expression) {
+        match expr {
+            Expression::ThreeRegs(expr) => {
+                let rn = self.regs.get(expr.reg_n.to_num());
+                let rm = self.regs.get(expr.reg_m.to_num());
+                let barrel_shifter = expr.barrel_shifter;
+                let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
+                if istr.save_register {
+                    self.regs.update_flags(result.0, &result.1);
+                }
+                self.regs.set(expr.reg_d.to_num(), result.0);
+            }
+            Expression::TwoRegsLiteral(expr) => {
+                let rn = self.regs.get(expr.reg_m.to_num());
+                let rm = expr.literal.number as u32;
+                let barrel_shifter = expr.barrel_shifter;
+                let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
+                if istr.save_register {
+                    self.regs.update_flags(result.0, &result.1);
+                }
+                self.regs.set(expr.reg_d.to_num(), result.0);
+            }
+            _ => {
+                panic!("Invalid expression")
+            }
+        };
+        self.regs.set(15, self.regs.get(15) + 4);
+    }
 
-        let istr = op.instruction;
-
-        let expr = op.expression.clone();
-
+    fn perform_op(&mut self, istr: Instruction, expr: Expression) {
         if is_logical_arithmatic_op(&istr.value) {
-            match expr {
-                Expression::ThreeRegs(expr) => {
-                    let rn = self.regs.get(expr.reg_n.to_num());
-                    let rm = self.regs.get(expr.reg_m.to_num());
-                    let barrel_shifter = expr.barrel_shifter;
-                    let result =
-                        calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
-                    if istr.save_register {
-                        self.regs.update_flags(result.0, &result.1);
-                    }
-                    self.regs.set(expr.reg_d.to_num(), result.0);
-                }
-                Expression::TwoRegsLiteral(expr) => {
-                    let rn = self.regs.get(expr.reg_m.to_num());
-                    let rm = expr.literal.number as u32;
-                    let barrel_shifter = expr.barrel_shifter;
-                    let result =
-                        calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
-                    if istr.save_register {
-                        self.regs.update_flags(result.0, &result.1);
-                    }
-                    self.regs.set(expr.reg_d.to_num(), result.0);
-                }
-                _ => {
-                    panic!("Invalid expression")
-                }
-            };
-            self.regs.set(15, self.regs.get(15) + 4);
+            self.perform_logic_op(istr, expr)
         } else if is_move_op(&istr.value) {
             match expr {
                 Expression::TwoRegs(expr) => {
@@ -106,11 +102,35 @@ impl Cpu {
                         }
                     }
                 }
+                Expression::RegLiteral(expr) => {
+                    let rm = expr.literal.number;
+                    match istr.value {
+                        InstructionName::MOV => {
+                            self.regs.set(expr.register.to_num(), rm as u32);
+                        }
+                        InstructionName::MVN => {
+                            self.regs.set(expr.register.to_num(), -rm as u32);
+                        }
+                        _ => {
+                            panic!("Invalid instruction")
+                        }
+                    }
+                }
                 _ => {
                     panic!("Invalid expression")
                 }
             }
         }
+    }
+
+    fn cycle(&mut self) {
+        let op = self.next_instruction();
+
+        let istr = op.instruction;
+
+        let expr = op.expression.clone();
+
+        self.perform_op(istr, expr)
     }
 }
 

@@ -25,8 +25,6 @@ impl Tokenizer {
     }
 
     pub fn consume_line(&mut self) -> Vec<Token> {
-        self.reader.consume_whitespace();
-
         let line = self.reader.consume_line();
 
         let literals = self.split_at_separators(&line);

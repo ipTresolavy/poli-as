@@ -11,9 +11,8 @@ pub mod tokenizer;
 pub mod utils;
 
 fn main() {
-    let mut reader = Reader::new("hello.txt");
+    let reader = Reader::new("hello.txt");
 
-    reader.consume_whitespace();
     let tokenizer = Tokenizer::new(reader);
 
     let mut symbolizer = Symbolizer::new(tokenizer);

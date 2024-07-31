@@ -20,7 +20,7 @@ impl Reader {
         self.peek_char().is_none()
     }
 
-    pub fn consume_whitespace(&mut self) {
+    fn consume_whitespace(&mut self) {
         while let Some(c) = self.peek_char() {
             if !self.is_whitespace(c) {
                 break;
@@ -30,6 +30,8 @@ impl Reader {
     }
 
     pub fn consume_line(&mut self) -> String {
+        self.consume_whitespace();
+
         let mut acc = String::new();
 
         while let Some(c) = self.peek_char() {

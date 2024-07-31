@@ -54,6 +54,16 @@ impl Cpu {
         }
     }
 
+    fn cycle(&mut self) {
+        let op = self.next_instruction();
+
+        let istr = op.instruction;
+
+        let expr = op.expression.clone();
+
+        self.perform_op(istr, expr)
+    }
+
     fn perform_logic_op(&mut self, istr: Instruction, expr: Expression) {
         match expr {
             Expression::ThreeRegs(expr) => {
@@ -61,20 +71,22 @@ impl Cpu {
                 let rm = self.regs.get(expr.reg_m.to_num());
                 let barrel_shifter = expr.barrel_shifter;
                 let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
+                self.regs.set(expr.reg_d.to_num(), result.0);
+
                 if istr.save_register {
                     self.regs.update_flags(result.0, &result.1);
                 }
-                self.regs.set(expr.reg_d.to_num(), result.0);
             }
             Expression::TwoRegsLiteral(expr) => {
                 let rn = self.regs.get(expr.reg_m.to_num());
                 let rm = expr.literal.number as u32;
                 let barrel_shifter = expr.barrel_shifter;
                 let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
+                self.regs.set(expr.reg_d.to_num(), result.0);
+
                 if istr.save_register {
                     self.regs.update_flags(result.0, &result.1);
                 }
-                self.regs.set(expr.reg_d.to_num(), result.0);
             }
             _ => {
                 panic!("Invalid expression")
@@ -97,6 +109,7 @@ impl Cpu {
                         InstructionName::MVN => {
                             self.regs.set(expr.reg_d.to_num(), negate_u32(rm));
                         }
+                        InstructionName::CMP => {}
                         _ => {
                             panic!("Invalid instruction")
                         }
@@ -121,16 +134,6 @@ impl Cpu {
                 }
             }
         }
-    }
-
-    fn cycle(&mut self) {
-        let op = self.next_instruction();
-
-        let istr = op.instruction;
-
-        let expr = op.expression.clone();
-
-        self.perform_op(istr, expr)
     }
 }
 

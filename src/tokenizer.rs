@@ -167,12 +167,7 @@ fn reg_from_literal(literal: &str) -> Token {
     let reg_num = literal.chars().collect::<String>();
 
     let reg_num = if is_special_reg(&reg_num) {
-        match reg_num.as_str() {
-            "sp" => Some(RegisterNumbers::THIRTEEN),
-            "lr" => Some(RegisterNumbers::FOURTEEN),
-            "pc" => Some(RegisterNumbers::FIFTEEN),
-            _ => None,
-        }
+        parse_special_reg(&reg_num)
     } else {
         let capture = parse_regex_number(&reg_num).unwrap();
 
@@ -189,6 +184,15 @@ fn reg_from_literal(literal: &str) -> Token {
             Token::REGISTER(register)
         }
         None => Token::ILLEGAL,
+    }
+}
+
+fn parse_special_reg(str: &str) -> Option<RegisterNumbers> {
+    match str {
+        "sp" => Some(RegisterNumbers::THIRTEEN),
+        "lr" => Some(RegisterNumbers::FOURTEEN),
+        "pc" => Some(RegisterNumbers::FIFTEEN),
+        _ => None,
     }
 }
 

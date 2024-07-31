@@ -58,42 +58,9 @@ impl Reader {
         curr_char
     }
 
-    // fn consume_to_whitespace(&mut self) -> Option<String> {
-    //     let mut result = String::new();
-    //
-    //     while let Some(c) = self.peek_char() {
-    //         if self.is_whitespace(c) {
-    //             break;
-    //         }
-    //
-    //         result.push(c);
-    //
-    //         if self.is_separator_char(self.peek_next_char()) {
-    //             self.position += 1;
-    //             break;
-    //         }
-    //
-    //         self.next_char();
-    //     }
-    //
-    //     if result.is_empty() {
-    //         None
-    //     } else {
-    //         Some(result)
-    //     }
-    // }
-
-    // fn is_separator_char(&self, c: Option<char>) -> bool {
-    //     c.is_none() || c.unwrap() == '-' || c.unwrap() == ','
-    // }
-
     pub fn peek_char(&self) -> Option<char> {
         self.read_at_position(self.position)
     }
-
-    // fn peek_next_char(&self) -> Option<char> {
-    //     self.read_at_position(self.position + 1)
-    // }
 
     fn read_at_position(&self, position: u64) -> Option<char> {
         let mut buf = [0; 1];

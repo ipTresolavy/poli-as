@@ -27,8 +27,12 @@ fn main() {
 
     let program = lexer.parse();
 
-    let mut cpu = emulator::cpu::Cpu::new();
+    for op in program {
+        op.to_machine_code();
+    }
 
-    cpu.load_program(program);
-    cpu.run();
+    // let mut cpu = emulator::cpu::Cpu::new();
+    //
+    // cpu.load_program(program);
+    // cpu.run();
 }

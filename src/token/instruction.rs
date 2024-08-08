@@ -75,4 +75,26 @@ impl ConditionCode {
             _ => None,
         }
     }
+
+    pub fn to_machine_code(&self) -> u32 {
+        match self {
+            ConditionCode::Eq => 0,
+            ConditionCode::Ne => 1 << 28,
+            ConditionCode::Cs => 2 << 28,
+            ConditionCode::Hs => 3 << 28,
+            ConditionCode::Cc => 4 << 28,
+            ConditionCode::Lo => 5 << 28,
+            ConditionCode::Mi => 6 << 28,
+            ConditionCode::Pl => 7 << 28,
+            ConditionCode::Vs => 8 << 28,
+            ConditionCode::Vc => 9 << 28,
+            ConditionCode::Hi => 10 << 28,
+            ConditionCode::Ls => 11 << 28,
+            ConditionCode::Ge => 12 << 28,
+            ConditionCode::Lt => 13 << 28,
+            ConditionCode::Gt => 14 << 28,
+            ConditionCode::Le => 15 << 28,
+            ConditionCode::Al => 16 << 28,
+        }
+    }
 }

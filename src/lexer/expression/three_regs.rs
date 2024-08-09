@@ -26,4 +26,16 @@ impl ThreeRegsExpression {
             barrel_shifter,
         }
     }
+
+    pub fn to_machine_code(&self) -> u32 {
+        let reg_d = self.reg_d.to_num() as u32;
+        let reg_m = self.reg_m.to_num() as u32;
+        let reg_n = self.reg_n.to_num() as u32;
+        let barrel_shifter = self
+            .barrel_shifter
+            .map(|bs| bs.to_machine_code())
+            .unwrap_or(0);
+
+        (reg_d << 12) | (reg_m << 16) | reg_n | barrel_shifter
+    }
 }

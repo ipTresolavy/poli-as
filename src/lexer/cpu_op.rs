@@ -69,7 +69,9 @@ impl CpuOperation {
 
         let base = base | (proc_opcode << 21);
 
-        0
+        let expression = get_proc_expression(&self.expression);
+
+        base | expression
     }
 }
 
@@ -96,14 +98,11 @@ fn get_proc_opcode(operation: &InstructionName) -> u32 {
 }
 
 fn get_proc_expression(expression: &Expression) -> u32 {
-    0
-    // match expression {
-    //     Expression::TwoRegs(reg_d) => {}
-    //     Expression::RegLiteral(reg, imm) => {
-    //         let reg = reg.to_machine_code();
-    //         let imm = imm.to_machine_code();
-    //         reg | (imm << 7)
-    //     }
-    //     _ => panic!("Invalid expression"),
-    // }
+    match expression {
+        Expression::ThreeRegs(expr) => expr.to_machine_code(),
+        Expression::TwoRegs(expr) => expr.to_machine_code(),
+        Expression::TwoRegsLiteral(expr) => expr.to_machine_code(),
+        Expression::RegLiteral(expr) => expr.to_machine_code(),
+        _ => panic!("Invalid expression"),
+    }
 }

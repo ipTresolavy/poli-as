@@ -98,13 +98,11 @@ fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
                 barrel_shifter,
             ))
         }
-        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm), rest @ ..] => {
-            let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::IMMEDIATE(imm)] => {
             Expression::TwoRegsLiteral(TwoRegsLiteralExpression::new(
                 reg_d.to_owned(),
                 reg_m.to_owned(),
                 imm.clone(),
-                barrel_shifter,
             ))
         }
         _ => panic!("Invalid operands"),
@@ -113,9 +111,14 @@ fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
 
 fn parse_move_op(operands: &[Token]) -> Expression {
     match operands {
-        [Token::REGISTER(reg_d), Token::REGISTER(reg_m)] => Expression::TwoRegs(
-            expression::two_regs::TwoRegsExpression::new(reg_d.to_owned(), reg_m.to_owned()),
-        ),
+        [Token::REGISTER(reg_d), Token::REGISTER(reg_m), rest @ ..] => {
+            let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);
+            Expression::TwoRegs(expression::two_regs::TwoRegsExpression::new(
+                reg_d.to_owned(),
+                reg_m.to_owned(),
+                barrel_shifter,
+            ))
+        }
         [Token::REGISTER(reg_d), Token::IMMEDIATE(imm)] => {
             Expression::RegLiteral(RegLiteralExpression::new(reg_d.to_owned(), imm.clone()))
         }

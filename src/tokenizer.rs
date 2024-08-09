@@ -106,6 +106,7 @@ impl Tokenizer {
 
         if literal.starts_with('#') {
             let immediate = Immediate::new(literal.chars().skip(1).collect::<String>());
+
             if let Some(value) = immediate {
                 return Token::IMMEDIATE(value);
             } else {

@@ -80,8 +80,7 @@ impl Cpu {
             Expression::TwoRegsLiteral(expr) => {
                 let rn = self.regs.get(expr.reg_m.to_num());
                 let rm = expr.literal.number as u32;
-                let barrel_shifter = expr.barrel_shifter;
-                let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
+                let result = calculate_logical_expr(istr.value, rn, rm, None, &self.regs);
                 self.regs.set(expr.reg_d.to_num(), result.0);
 
                 if istr.save_register {
@@ -119,10 +118,10 @@ impl Cpu {
                     let rm = expr.literal.number;
                     match istr.value {
                         InstructionName::MOV => {
-                            self.regs.set(expr.register.to_num(), rm as u32);
+                            self.regs.set(expr.register.to_num(), rm);
                         }
                         InstructionName::MVN => {
-                            self.regs.set(expr.register.to_num(), -rm as u32);
+                            self.regs.set(expr.register.to_num(), -(rm as i32) as u32);
                         }
                         _ => {
                             panic!("Invalid instruction")

@@ -2,7 +2,7 @@
 pub struct Immediate {
     pub value: String,
     pub base: ImmediateBase,
-    pub number: i32,
+    pub number: u32,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -33,11 +33,11 @@ impl Immediate {
     pub fn new(value: String) -> Option<Immediate> {
         let base = determine_base(&value)?;
 
-        let number: i32 = match base {
-            ImmediateBase::HEX => i32::from_str_radix(value.trim_start_matches("0x"), 16).ok()?,
-            ImmediateBase::DEC => value.parse::<i32>().ok()?,
-            ImmediateBase::OCT => i32::from_str_radix(value.trim_start_matches("0o"), 8).ok()?,
-            ImmediateBase::BIN => i32::from_str_radix(value.trim_start_matches("0b"), 2).ok()?,
+        let number: u32 = match base {
+            ImmediateBase::HEX => u32::from_str_radix(value.trim_start_matches("0x"), 16).ok()?,
+            ImmediateBase::DEC => value.parse::<u32>().ok()?,
+            ImmediateBase::OCT => u32::from_str_radix(value.trim_start_matches("0o"), 8).ok()?,
+            ImmediateBase::BIN => u32::from_str_radix(value.trim_start_matches("0b"), 2).ok()?,
         };
 
         Some(Immediate {

@@ -21,7 +21,7 @@ impl CpuOperation {
         let condition_mask = self.instruction.condition.to_machine_code();
         code.push_mask((15 << 28) as u32, condition_mask);
 
-        println!("{}", code.to_debug_string());
+        code.push_mask(0x0fffffff, self.generate_proc());
 
         code
     }

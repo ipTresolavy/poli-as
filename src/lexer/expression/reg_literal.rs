@@ -20,18 +20,18 @@ impl RegLiteralExpression {
         let (rotation, lower_byte) =
             check_immediate_possible(literal).expect("Impossível representar o valor imediato");
 
-        (register << 12) | (rotation as u32) << 8 | lower_byte as u32
+        (register << 12) | (rotation as u32) << 8 | lower_byte as u32 | 1 << 25
     }
 }
 
 fn check_immediate_possible(immediate: u32) -> Option<(u8, u8)> {
     for rotation in 0..16 {
-        let rotated_value = immediate.rotate_right(rotation * 2);
-        let lower_byte = rotated_value & 0xFF;
+        let val: u32 = 0xFF_u32.rotate_right(rotation * 2);
+        let val = !val;
 
-        // Verifica se os bits restantes são todos 0
-        if rotated_value >> 8 == 0 {
-            return Some((rotation as u8, lower_byte as u8));
+        if immediate & val == 0 {
+            let offset = (immediate & !val).rotate_right((16 - rotation) * 2);
+            return Some((rotation as u8, offset as u8));
         }
     }
     None

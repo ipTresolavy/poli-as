@@ -1,5 +1,6 @@
 use lexer::symbolizer::Symbolizer;
 use reader::Reader;
+use utils::debug_u32;
 
 use crate::tokenizer::Tokenizer;
 
@@ -28,7 +29,9 @@ fn main() {
     let program = lexer.parse();
 
     for op in program {
-        op.to_machine_code();
+        let res = op.to_machine_code();
+
+        println!("{:?}", res.to_debug_string());
     }
 
     // let mut cpu = emulator::cpu::Cpu::new();

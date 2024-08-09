@@ -33,9 +33,7 @@
           [ rust ]
           ++ (with pkgs; [
             pkg-config
-            # other dependencies
-            #gtk3
-            #wrapGAppsHook
+            lazygit
           ]);
         RUST_BACKTRACE = 1;
       };

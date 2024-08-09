@@ -1,8 +1,10 @@
+#[derive(Debug)]
 pub struct MachineCodeBit {
     pub position: u8,
     pub value: bool,
 }
 
+#[derive(Debug)]
 pub struct MachineCodeInstruction {
     pub bits: Vec<MachineCodeBit>,
 }
@@ -30,12 +32,20 @@ impl MachineCodeInstruction {
                 self.set(i as u8, value & (1 << i) != 0);
             }
         }
+
+        self.sort_code();
+    }
+
+    fn sort_code(&mut self) {
+        self.bits.sort_by(|a, b| a.position.cmp(&b.position));
     }
 
     pub fn to_debug_string(&self) -> String {
         let mut machine_code = String::new();
-        for bit in &self.bits {
-            if bit.value {
+
+        for i in 0..32 {
+            let k = 31 - i;
+            if self.bits[k as usize].value {
                 machine_code.push('1');
             } else {
                 machine_code.push('0');

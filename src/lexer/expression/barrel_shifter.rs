@@ -1,6 +1,7 @@
 use crate::{
     emulator::regs::CpuRegisters,
     token::{instruction_name::InstructionName, register::Register, Token},
+    utils::debug_u32,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -72,5 +73,71 @@ impl BarrelShifterExpression {
                 }
             }
         }
+    }
+
+    pub fn to_machine_code(&self) -> u32 {
+        let shifter_opcode = match self.shift_amount {
+            BarrealShifterShiftAmount::Number(imm) => ((imm & 0x0000001f) as u32) << 7,
+            BarrealShifterShiftAmount::Register(reg) => ((reg.to_num() as u32) << 8) | (1 << 4),
+        };
+
+        let shift_type_code: u32 = match self.operation {
+            BarrelShifterOperation::LSL => 0,
+            BarrelShifterOperation::LSR => 1,
+            BarrelShifterOperation::ASR => 2,
+            BarrelShifterOperation::ROR => 3,
+        } << 5;
+
+        debug_u32(shift_type_code);
+
+        shifter_opcode | shift_type_code
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::token::{
+        immediate::Immediate,
+        instruction::Instruction,
+        register::{Register, RegisterNumbers},
+        Token,
+    };
+
+    fn create_instruction() -> Token {
+        let istr = Instruction::new("lsr", Some("s"), None);
+        Token::INSTRUCTION(istr.unwrap())
+    }
+
+    fn create_register() -> Token {
+        let reg = Register::new(RegisterNumbers::ONE);
+        Token::REGISTER(reg)
+    }
+
+    fn create_immediate(num: &str) -> Token {
+        let imm = Immediate::new(num.to_string());
+        Token::IMMEDIATE(imm.expect("should work"))
+    }
+
+    #[test]
+    fn test_barrel_shifter_expression_to_machine_code_with_immediate() {
+        let tokens = vec![create_instruction(), create_immediate("0x5")];
+
+        let expression = BarrelShifterExpression::new(&tokens).unwrap();
+
+        let machine_code = expression.to_machine_code();
+
+        assert_eq!(machine_code, 0b00101010 << 4);
+    }
+
+    #[test]
+    fn test_barrel_shifter_expression_to_machine_code_with_register() {
+        let tokens = vec![create_instruction(), create_register()];
+
+        let expression = BarrelShifterExpression::new(&tokens).unwrap();
+
+        let machine_code = expression.to_machine_code();
+
+        assert_eq!(machine_code, 0b00010011 << 4);
     }
 }

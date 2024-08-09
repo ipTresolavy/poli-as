@@ -46,4 +46,8 @@ impl Immediate {
             number,
         })
     }
+
+    pub fn to_num(&self) -> u32 {
+        self.number as u32
+    }
 }

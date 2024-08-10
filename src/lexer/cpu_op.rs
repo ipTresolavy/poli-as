@@ -127,8 +127,6 @@ impl CpuOperation {
             .unwrap_or(Immediate::new("0x0".to_owned()).unwrap())
             .to_num() as i32;
 
-        println!("imm: {}", imm);
-
         let imm_u32: u32 = if imm < 0 {
             imm.unsigned_abs()
         } else {

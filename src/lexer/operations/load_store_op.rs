@@ -44,7 +44,6 @@ pub fn parse_load_store_op(instruction: &InstructionName, operands: &[Token]) ->
 }
 
 fn parse_single_op(operands: &[Token]) -> Expression {
-    println!("{:?}", operands);
     match operands {
         [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN] => {
             Expression::LoadStoreImmediate(LoadStoreImmediateExpression::new(

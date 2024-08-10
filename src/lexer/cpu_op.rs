@@ -5,6 +5,7 @@ use crate::token::{
 use super::{
     expression::{
         ls_imm_index::{IndexMode, LoadStoreImmediateExpression},
+        ls_multiple::LoadStoreMultipleExpression,
         ls_reg_index::LoadStoreRegisterExpression,
         Expression,
     },
@@ -30,7 +31,16 @@ impl CpuOperation {
         let condition_mask = self.instruction.condition.to_machine_code();
         code.push_mask((15 << 28) as u32, condition_mask);
 
-        code.push_mask(0x0fffffff, self.generate_load_store());
+        code.push_mask(
+            0x0fffffff,
+            CpuOperation::generate_load_store_multiple(
+                &self.instruction,
+                match &self.expression {
+                    Expression::LoadStoreMultiple(expr) => expr,
+                    _ => panic!("Expected load store multiple expression"),
+                },
+            ),
+        );
 
         code
     }
@@ -168,6 +178,38 @@ impl CpuOperation {
 
         istr | base | destination | index | barrel_shifter | offset | negative
     }
+
+    fn generate_load_store_multiple(
+        instruction: &Instruction,
+        expr: &LoadStoreMultipleExpression,
+    ) -> u32 {
+        let istr: u32 = 1 << 27;
+        let base: u32 = (expr.base.to_num() as u32) << 16;
+        let write_back = if expr.write_back { 1 << 21 } else { 0 };
+        let save_spsr = if instruction.save_register {
+            1 << 22
+        } else {
+            0
+        };
+
+        let before_or_after = if after_istr(instruction) { 0 } else { 1 << 24 };
+
+        let load = if load_istr(instruction) { 1 << 20 } else { 0 };
+
+        let increment = if increment_istr(instruction) {
+            1 << 23
+        } else {
+            0
+        };
+
+        let mut reg_to_transfer = 0;
+        for reg in &expr.registers {
+            let reg_num = reg.to_num();
+            reg_to_transfer |= 1 << reg_num;
+        }
+
+        istr | base | write_back | save_spsr | increment | reg_to_transfer | load | before_or_after
+    }
 }
 
 fn get_proc_opcode(operation: &InstructionName) -> u32 {
@@ -190,6 +232,34 @@ fn get_proc_opcode(operation: &InstructionName) -> u32 {
         InstructionName::MVN => 15,
         _ => panic!("Invalid operation"),
     }
+}
+
+fn load_istr(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(
+        instruction.value,
+        LDMIA | LDMIB | LDMDA | LDMDB | LDR | LDRB | LDRH | LDRSB | LDRSH
+    )
+}
+
+fn increment_istr(instruction: &Instruction) -> bool {
+    matches!(
+        instruction.value,
+        InstructionName::LDMIA
+            | InstructionName::STMIA
+            | InstructionName::LDMIB
+            | InstructionName::STMIB
+    )
+}
+
+fn after_istr(instruction: &Instruction) -> bool {
+    matches!(
+        instruction.value,
+        InstructionName::LDMIA
+            | InstructionName::STMIA
+            | InstructionName::LDMDA
+            | InstructionName::STMDA
+    )
 }
 
 fn get_proc_expression(expression: &Expression) -> u32 {

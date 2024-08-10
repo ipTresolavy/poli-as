@@ -7,6 +7,7 @@ use super::{barrel_shifter::BarrelShifterExpression, ls_imm_index::IndexMode};
 pub struct LoadStoreRegisterExpression {
     pub destination: Register,
     pub base: Register,
+    pub negative: bool,
     pub offset: Register,
     pub index_mode: IndexMode,
     pub barrel_shifter: Option<BarrelShifterExpression>,
@@ -17,6 +18,7 @@ impl LoadStoreRegisterExpression {
         destination: Register,
         register: Register,
         offset: Register,
+        negative: bool,
         index_mode: IndexMode,
         barrel_shifter: Option<BarrelShifterExpression>,
     ) -> Self {
@@ -25,6 +27,7 @@ impl LoadStoreRegisterExpression {
                 destination,
                 base: register,
                 offset,
+                negative,
                 index_mode,
                 barrel_shifter,
             },
@@ -32,6 +35,7 @@ impl LoadStoreRegisterExpression {
                 destination,
                 base: register,
                 offset,
+                negative,
                 index_mode,
                 barrel_shifter,
             },

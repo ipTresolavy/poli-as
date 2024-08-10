@@ -83,6 +83,17 @@ fn parse_single_op(operands: &[Token]) -> Expression {
                 dest.to_owned(),
                 base.to_owned(),
                 offset.to_owned(),
+                false,
+                IndexMode::Post,
+                None,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN, Token::MINUS, Token::REGISTER(offset)] => {
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                true,
                 IndexMode::Post,
                 None,
             ))
@@ -95,6 +106,20 @@ fn parse_single_op(operands: &[Token]) -> Expression {
                 dest.to_owned(),
                 base.to_owned(),
                 offset.to_owned(),
+                false,
+                IndexMode::Post,
+                barrel_shifter,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::RPAREN, Token::MINUS, Token::REGISTER(offset), rest @ ..] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
+
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                true,
                 IndexMode::Post,
                 barrel_shifter,
             ))
@@ -105,8 +130,32 @@ fn parse_single_op(operands: &[Token]) -> Expression {
                 dest.to_owned(),
                 base.to_owned(),
                 offset.to_owned(),
+                false,
                 IndexMode::Pre(PreIndex { write_back: false }),
                 None,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::MINUS, Token::REGISTER(offset), Token::RPAREN] => {
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                true,
+                IndexMode::Pre(PreIndex { write_back: false }),
+                None,
+            ))
+        }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::MINUS, Token::REGISTER(offset), rest @ .., Token::RPAREN, Token::BANG] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
+
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                true,
+                IndexMode::Pre(PreIndex { write_back: true }),
+                barrel_shifter,
             ))
         }
         [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::REGISTER(offset), rest @ .., Token::RPAREN, Token::BANG] =>
@@ -117,11 +166,24 @@ fn parse_single_op(operands: &[Token]) -> Expression {
                 dest.to_owned(),
                 base.to_owned(),
                 offset.to_owned(),
+                false,
                 IndexMode::Pre(PreIndex { write_back: true }),
                 barrel_shifter,
             ))
         }
+        [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::MINUS, Token::REGISTER(offset), rest @ .., Token::RPAREN] =>
+        {
+            let barrel_shifter = BarrelShifterExpression::new(rest);
 
+            Expression::LoadStoreRegister(LoadStoreRegisterExpression::new(
+                dest.to_owned(),
+                base.to_owned(),
+                offset.to_owned(),
+                true,
+                IndexMode::Pre(PreIndex { write_back: false }),
+                barrel_shifter,
+            ))
+        }
         [Token::REGISTER(dest), Token::LPAREN, Token::REGISTER(base), Token::REGISTER(offset), rest @ .., Token::RPAREN] =>
         {
             let barrel_shifter = BarrelShifterExpression::new(rest);
@@ -130,6 +192,7 @@ fn parse_single_op(operands: &[Token]) -> Expression {
                 dest.to_owned(),
                 base.to_owned(),
                 offset.to_owned(),
+                false,
                 IndexMode::Pre(PreIndex { write_back: false }),
                 barrel_shifter,
             ))

@@ -88,8 +88,6 @@ impl BarrelShifterExpression {
             BarrelShifterOperation::ROR => 3,
         } << 5;
 
-        debug_u32(shift_type_code);
-
         shifter_opcode | shift_type_code
     }
 }

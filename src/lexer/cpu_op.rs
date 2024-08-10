@@ -5,6 +5,7 @@ use crate::token::{
 use super::{
     expression::{
         ls_imm_index::{IndexMode, LoadStoreImmediateExpression},
+        ls_reg_index::LoadStoreRegisterExpression,
         Expression,
     },
     machine_code_builder::MachineCodeInstruction,
@@ -95,6 +96,7 @@ impl CpuOperation {
 
         let expression = match self.expression {
             Expression::LoadStoreImmediate(ref expr) => CpuOperation::generate_load_store_imm(expr),
+            Expression::LoadStoreRegister(ref expr) => CpuOperation::generate_load_store_reg(expr),
             _ => panic!("Expected load store immediate expression"),
         };
 
@@ -137,6 +139,34 @@ impl CpuOperation {
         let imm = imm_u32 & 0xfff;
 
         istr | base | destination | index | imm
+    }
+
+    fn generate_load_store_reg(expr: &LoadStoreRegisterExpression) -> u32 {
+        let istr: u32 = 1 << 25;
+        let base: u32 = (expr.base.to_num() as u32) << 16;
+        let destination = (expr.destination.to_num() as u32) << 12;
+        let offset = expr.offset.to_num() as u32;
+        let barrel_shifter = expr
+            .barrel_shifter
+            .map(|bs| bs.to_machine_code())
+            .unwrap_or(0);
+
+        let negative = if expr.negative { 0 } else { 1 << 23 };
+
+        let index = match expr.index_mode {
+            IndexMode::Pre(index) => {
+                let mask = 1 << 24;
+                if index.write_back {
+                    mask | 1 << 21
+                } else {
+                    mask
+                }
+            }
+            IndexMode::Post => 0,
+            IndexMode::None => 0,
+        };
+
+        istr | base | destination | index | barrel_shifter | offset | negative
     }
 }
 

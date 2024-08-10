@@ -5,5 +5,5 @@ edition = "2021"
 
 
 [dependencies]
-object = "0.36.3"
+object = {version = "0.36.3", features = ["write_core", "elf"]}
 regex = "1"

@@ -4,6 +4,7 @@ use utils::debug_u32;
 
 use crate::tokenizer::Tokenizer;
 
+pub mod elf;
 pub mod emulator;
 pub mod lexer;
 pub mod reader;

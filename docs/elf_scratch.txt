@@ -5,7 +5,7 @@ Elf Header:
 - e_ph* = 0
 - e_shoff set manually or automatically?
 - set e_flags with the value 0x50000000 (what does this value mean?)
-- e_ehsize = 0x34
+- e_ehsize = 0x34 (set manually or automatically?)
 - e_shentsize = 0x28 (set manually or automatically?)
 - e_shnum set manually or automatically?
 - e_shstrndx points to the index of the .shstrtab section

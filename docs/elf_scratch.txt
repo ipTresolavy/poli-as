@@ -1,0 +1,284 @@
+Elf Header:
+
+- Fill ELF header on initialization with right values
+- e_entry = 0
+- e_ph* = 0
+- e_shoff set manually or automatically?
+- set e_flags with the value 0x50000000 (what does this value mean?)
+- e_ehsize = 0x34
+- e_shentsize = 0x28 (set manually or automatically?)
+- e_shnum set manually or automatically?
+- e_shstrndx points to the index of the .shstrtab section
+  - check if the object elf write functions don't already set this section. If not, do the following:
+    - keep a record of the section names and then, in the function that actually writes the .o file, define the .shstrtab section and fill it with the values
+
+
+Section headers:
+
+  - Null section: should I put it manually or is it put automatically?
+
+| Offset | Field          | Value         |
+|--------|----------------|---------------|
+| 0x0    | sh_name        | 0 -> [empty string] |
+| 0x4    | sh_type        | SHT_NULL      |
+| 0x8    | sh_flags       | -             |
+| 0xc    | sh_addr        | 0             |
+| 0x10   | sh_offset      | 0             |
+| 0x14   | sh_size        | 0             |
+| 0x18   | sh_link        | 0             |
+| 0x1c   | sh_info        | 0             |
+| 0x20   | sh_addralign   | 0             |
+| 0x24   | sh_entsize     | 0             |
+
+| Offset | Field          | Value                          |
+|--------|----------------|--------------------------------|
+| 0x0    | sh_name        | 31 -> .text                    |
+| 0x4    | sh_type        | SHT_PROGBITS                   |
+| 0x8    | sh_flags       | SHF_ALLOC \| SHF_EXECINSTR     |
+| 0xc    | sh_addr        | 0                              |
+| 0x10   | sh_offset      | 0x34                           |
+| 0x14   | sh_size        | 0xd7c                          |
+| 0x18   | sh_link        | 0                              |
+| 0x1c   | sh_info        | 0                              |
+| 0x20   | sh_addralign   | 0x4                            |
+| 0x24   | sh_entsize     | 0                              |
+
+| Offset | Field          | Value               |
+|--------|----------------|---------------------|
+| 0x0    | sh_name        | 27 -> .rel.text     |
+| 0x4    | sh_type        | SHT_REL             |
+| 0x8    | sh_flags       | SHF_INFO_LINK       |
+| 0xc    | sh_addr        | 0                   |
+| 0x10   | sh_offset      | 0x251c              |
+| 0x14   | sh_size        | 0x3c0               |
+| 0x18   | sh_link        | 0x12                |
+| 0x1c   | sh_info        | 0x1                 |
+| 0x20   | sh_addralign   | 0x4                 |
+| 0x24   | sh_entsize     | 0x8                 |
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 37 -> .data                |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | SHF_WRITE \| SHF_ALLOC     |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0xdb0                      |
+| 0x14   | sh_size        | 0                          |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 43 -> .bss                 |
+| 0x4    | sh_type        | SHT_NOBITS                 |
+| 0x8    | sh_flags       | SHF_WRITE \| SHF_ALLOC     |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0xdb0                      |
+| 0x14   | sh_size        | 0x194                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 48 -> .rodata              |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | SHF_ALLOC                  |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0xdb0                      |
+| 0x14   | sh_size        | 0x1e                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 60 -> .debug_info          |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0xdce                      |
+| 0x14   | sh_size        | 0x64c                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 56 -> .rel.debug_info      |
+| 0x4    | sh_type        | SHT_REL                    |
+| 0x8    | sh_flags       | SHF_INFO_LINK              |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x28dc                     |
+| 0x14   | sh_size        | 0x370                      |
+| 0x18   | sh_link        | 0x12                       |
+| 0x1c   | sh_info        | 0x6                        |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0x8                        |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 72 -> .debug_abbrev        |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x141a                     |
+| 0x14   | sh_size        | 0x292                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 90 -> .debug_aranges       |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x16ac                     |
+| 0x14   | sh_size        | 0x20                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 86 -> .rel.debug_aranges   |
+| 0x4    | sh_type        | SHT_REL                    |
+| 0x8    | sh_flags       | SHF_INFO_LINK              |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2c4c                     |
+| 0x14   | sh_size        | 0x10                       |
+| 0x18   | sh_link        | 0x12                       |
+| 0x1c   | sh_info        | 0x9                        |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0x8                        |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 109 -> .debug_line         |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x16cc                     |
+| 0x14   | sh_size        | 0x4ea                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 105 -> .rel.debug_line     |
+| 0x4    | sh_type        | SHT_REL                    |
+| 0x8    | sh_flags       | SHF_INFO_LINK              |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2c5c                     |
+| 0x14   | sh_size        | 0x8                        |
+| 0x18   | sh_link        | 0x12                       |
+| 0x1c   | sh_info        | 0x6                        |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0x8                        |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 121 -> .debug_str          |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | SHF_MERGE \| SHF_STRINGS   |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x1bb6                     |
+| 0x14   | sh_size        | 0x37b                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0x1                        |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 132 -> .comment            |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | SHF_MERGE \| SHF_STRINGS   |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x1f31                     |
+| 0x14   | sh_size        | 0x24                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0x1                        |
+
+### Elf_Shdr 15
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 145 -> .debug_frame        |
+| 0x4    | sh_type        | SHT_PROGBITS               |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x1f58                     |
+| 0x14   | sh_size        | 0x1dc                      |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0                          |
+
+### Elf_Shdr 16
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 141 -> .rel.debug_frame    |
+| 0x4    | sh_type        | SHT_REL                    |
+| 0x8    | sh_flags       | SHF_INFO_LINK              |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2c64                     |
+| 0x14   | sh_size        | 0xf0                       |
+| 0x18   | sh_link        | 0xf                        |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0x8                        |
+
+### Elf_Shdr 17
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 158 -> .ARM.attributes     |
+| 0x4    | sh_type        | 0x70000003                 |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2134                     |
+| 0x14   | sh_size        | 0x2f                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 1 -> .symtab               |
+| 0x4    | sh_type        | SHT_SYMTAB                 |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2164                     |
+| 0x14   | sh_size        | 0x2c0                      |
+| 0x18   | sh_link        | 0x13                       |
+| 0x1c   | sh_info        | 0x14                       |
+| 0x20   | sh_addralign   | 0x4                        |
+| 0x24   | sh_entsize     | 0x10                       |
+

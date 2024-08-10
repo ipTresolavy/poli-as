@@ -9,35 +9,26 @@ use std::io::{self, BufWriter, Write};
 
 pub struct ElfWriter<'a> {
     object: Object<'a>,
-    writer: Writer<'a>,
     file_name: String,
+    streaming_buffer: StreamingBuffer<BufWriter<File>>,
 }
 
 impl<'a> ElfWriter<'a> {
     fn new(file_name: String) -> ElfWriter<'a> {
         let endianess = Endianness::Little;
-        let object = Object::new(
-            object::BinaryFormat::Elf,
-            Architecture::Arm,
-            endianess.clone(), // FIXME: really necessary?
-        );
+        let object = Object::new(object::BinaryFormat::Elf, Architecture::Arm, endianess);
         let file = File::create(file_name.clone()).expect("Was not able to create output file");
         let buf_writer = BufWriter::new(file);
-        let mut streaming_buffer = StreamingBuffer::new(buf_writer);
-
-        let writer = Writer::new(endianess.clone(), false, &mut streaming_buffer);
+        let streaming_buffer = StreamingBuffer::new(buf_writer);
 
         ElfWriter {
             object,
-            writer,
             file_name,
+            streaming_buffer,
         }
     }
 
-    // Additional methods for ElfWriter can be added here
+    fn write(&mut self) -> Writer {
+        Writer::new(Endianness::Little, false, &mut self.streaming_buffer)
+    }
 }
-
-// fn main() {
-//     let elf_writer = ElfWriter::new("output.elf".to_string());
-//     // Additional logic using elf_writer
-// }

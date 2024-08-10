@@ -1,6 +1,14 @@
-use crate::token::{instruction::Instruction, instruction_name::InstructionName};
+use crate::token::{
+    immediate::Immediate, instruction::Instruction, instruction_name::InstructionName,
+};
 
-use super::{expression::Expression, machine_code_builder::MachineCodeInstruction};
+use super::{
+    expression::{
+        ls_imm_index::{IndexMode, LoadStoreImmediateExpression},
+        Expression,
+    },
+    machine_code_builder::MachineCodeInstruction,
+};
 
 #[derive(Debug)]
 pub struct CpuOperation {
@@ -21,7 +29,7 @@ impl CpuOperation {
         let condition_mask = self.instruction.condition.to_machine_code();
         code.push_mask((15 << 28) as u32, condition_mask);
 
-        code.push_mask(0x0fffffff, self.generate_proc());
+        code.push_mask(0x0fffffff, self.generate_load_store());
 
         code
     }
@@ -72,6 +80,65 @@ impl CpuOperation {
         let expression = get_proc_expression(&self.expression);
 
         base | expression
+    }
+
+    fn generate_load_store(&self) -> u32 {
+        let mut mask = 1 << 26;
+
+        let istr = match self.instruction.value {
+            InstructionName::LDR => 1 << 20,
+            InstructionName::STR => 0,
+            _ => panic!("Expected load store instruction"),
+        };
+
+        mask |= istr;
+
+        let expression = match self.expression {
+            Expression::LoadStoreImmediate(ref expr) => CpuOperation::generate_load_store_imm(expr),
+            _ => panic!("Expected load store immediate expression"),
+        };
+
+        mask |= expression;
+
+        mask
+    }
+
+    fn generate_load_store_imm(expr: &LoadStoreImmediateExpression) -> u32 {
+        let mut istr: u32 = 0;
+        let base: u32 = (expr.base.to_num() as u32) << 16;
+        let destination = (expr.destination.to_num() as u32) << 12;
+
+        let index = match expr.index_mode {
+            IndexMode::Pre(index) => {
+                let mask = 1 << 24;
+                if index.write_back {
+                    mask | 1 << 21
+                } else {
+                    mask
+                }
+            }
+            IndexMode::Post => 0,
+            IndexMode::None => 0,
+        };
+
+        let imm = expr
+            .clone()
+            .offset
+            .unwrap_or(Immediate::new("0x0".to_owned()).unwrap())
+            .to_num() as i32;
+
+        println!("imm: {}", imm);
+
+        let imm_u32: u32 = if imm < 0 {
+            imm.unsigned_abs()
+        } else {
+            istr |= 1 << 23;
+            imm as u32
+        };
+
+        let imm = imm_u32 & 0xfff;
+
+        istr | base | destination | index | imm
     }
 }
 

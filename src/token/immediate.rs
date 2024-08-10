@@ -35,7 +35,7 @@ impl Immediate {
 
         let number: u32 = match base {
             ImmediateBase::HEX => u32::from_str_radix(value.trim_start_matches("0x"), 16).ok()?,
-            ImmediateBase::DEC => value.parse::<u32>().ok()?,
+            ImmediateBase::DEC => (value.parse::<i32>().ok()?) as u32,
             ImmediateBase::OCT => u32::from_str_radix(value.trim_start_matches("0o"), 8).ok()?,
             ImmediateBase::BIN => u32::from_str_radix(value.trim_start_matches("0b"), 2).ok()?,
         };
@@ -48,6 +48,6 @@ impl Immediate {
     }
 
     pub fn to_num(&self) -> u32 {
-        self.number as u32
+        self.number
     }
 }

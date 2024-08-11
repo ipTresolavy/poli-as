@@ -72,6 +72,26 @@ impl ConditionCode {
         }
     }
 
+    pub fn to_string(&self) -> &str {
+        match self {
+            ConditionCode::Eq => "eq",
+            ConditionCode::Ne => "ne",
+            ConditionCode::Cs => "cs",
+            ConditionCode::Cc => "cc",
+            ConditionCode::Mi => "mi",
+            ConditionCode::Pl => "pl",
+            ConditionCode::Vs => "vs",
+            ConditionCode::Vc => "vc",
+            ConditionCode::Hi => "hi",
+            ConditionCode::Ls => "ls",
+            ConditionCode::Ge => "ge",
+            ConditionCode::Lt => "lt",
+            ConditionCode::Gt => "gt",
+            ConditionCode::Le => "le",
+            ConditionCode::Al => "",
+        }
+    }
+
     pub fn to_machine_code(&self) -> u32 {
         match self {
             ConditionCode::Eq => 0 << 28,

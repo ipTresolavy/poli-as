@@ -31,18 +31,41 @@ impl CpuOperation {
         let condition_mask = self.instruction.condition.to_machine_code();
         code.push_mask((15 << 28) as u32, condition_mask);
 
-        code.push_mask(
-            0x0fffffff,
-            CpuOperation::generate_load_store_multiple(
+        let machine_code = self.gen_machine_code();
+
+        code.push_mask(0x0fffffff, machine_code);
+
+        code
+    }
+
+    fn gen_machine_code(&self) -> u32 {
+        if is_load_store_multiple(&self.instruction) {
+            return CpuOperation::generate_load_store_multiple(
                 &self.instruction,
                 match &self.expression {
                     Expression::LoadStoreMultiple(expr) => expr,
                     _ => panic!("Expected load store multiple expression"),
                 },
-            ),
-        );
+            );
+        };
 
-        code
+        if is_load_store(&self.instruction) {
+            return self.generate_load_store();
+        };
+
+        if is_proc(&self.instruction) {
+            return self.generate_proc();
+        };
+
+        if is_bx(&self.instruction) {
+            return self.generate_bx();
+        };
+
+        if is_branch(&self.instruction) {
+            return self.generate_b();
+        };
+
+        panic!("Invalid Instruction");
     }
 
     fn generate_bx(&self) -> u32 {
@@ -259,6 +282,54 @@ fn after_istr(instruction: &Instruction) -> bool {
             | InstructionName::STMIA
             | InstructionName::LDMDA
             | InstructionName::STMDA
+    )
+}
+
+fn is_load_store_multiple(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(
+        instruction.value,
+        LDMIA | LDMIB | LDMDA | LDMDB | STMIA | STMIB | STMDA | STMDB
+    )
+}
+
+fn is_branch(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(instruction.value, B | BL)
+}
+
+fn is_bx(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(instruction.value, BX | BLX)
+}
+
+fn is_proc(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(
+        instruction.value,
+        AND | EOR
+            | SUB
+            | RSB
+            | ADD
+            | ADC
+            | SBC
+            | RSC
+            | TST
+            | TEQ
+            | CMP
+            | CMN
+            | ORR
+            | MOV
+            | BIC
+            | MVN
+    )
+}
+
+fn is_load_store(instruction: &Instruction) -> bool {
+    use InstructionName::*;
+    matches!(
+        instruction.value,
+        LDR | LDRB | LDRH | LDRSB | LDRSH | STR | STRB | STRH
     )
 }
 

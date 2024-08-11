@@ -37,7 +37,6 @@ fn check_immediate_possible(immediate: u32) -> Option<(u8, u8)> {
 
         if immediate & val == 0 {
             let offset = (immediate & !val).rotate_right((16 - rotation) * 2);
-            debug_u32(offset);
             return Some((rotation as u8, offset as u8));
         }
 

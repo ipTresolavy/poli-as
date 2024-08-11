@@ -1,5 +1,11 @@
 use crate::{
-    token::{immediate::Immediate, instruction_name::InstructionName, Token},
+    token::{
+        immediate::Immediate,
+        instruction::Instruction,
+        instruction_name::InstructionName,
+        register::{Register, RegisterNumbers},
+        Token,
+    },
     tokenizer::Tokenizer,
 };
 
@@ -56,6 +62,7 @@ impl Lexer {
 
         // first replace any labels with their addresses
         replace_label_ref(&mut tokens, &self.symbol_table);
+        let mut tokens = replace_pseudo_ops(tokens);
 
         let index = tokens
             .iter()
@@ -78,7 +85,7 @@ impl Lexer {
                     let expr = parse_load_store_op(&instruction.value, operands);
                     return Some(CpuOperation::new(*instruction, expr));
                 } else {
-                    panic!("Instruction not supported")
+                    panic!("Instruction {:?} not supported", instruction.value)
                 }
             }
         }
@@ -164,4 +171,64 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {
             *token = Token::IMMEDIATE(immediate);
         }
     }
+}
+
+fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
+    let index = tokens
+        .iter()
+        .position(|token| matches!(token, Token::INSTRUCTION(_)));
+
+    if let Some(index) = index {
+        let (instruction, operands) = tokens.split_at_mut(index + 1);
+        let instruction = instruction.last().unwrap();
+        if let Token::INSTRUCTION(instruction) = instruction {
+            if is_push_pop_istr(&instruction.value) {
+                match instruction.value {
+                    InstructionName::PUSH => {
+                        let istr = Instruction::new(
+                            "stmdb",
+                            None,
+                            Some(instruction.condition.to_string()),
+                        )
+                        .unwrap();
+
+                        tokens[index] = Token::INSTRUCTION(istr);
+                        tokens.insert(
+                            index + 1,
+                            Token::REGISTER(Register::new(RegisterNumbers::THIRTEEN)),
+                        );
+
+                        return tokens;
+                    }
+                    InstructionName::POP => {
+                        // let mut new_tokens = vec![Token::INSTRUCTION(InstructionName::LDMIA)];
+                        // new_tokens.extend(operands);
+                        // new_tokens
+                        let istr = Instruction::new(
+                            "ldmia",
+                            None,
+                            Some(instruction.condition.to_string()),
+                        )
+                        .unwrap();
+
+                        tokens[index] = Token::INSTRUCTION(istr);
+
+                        tokens.insert(
+                            index + 1,
+                            Token::REGISTER(Register::new(RegisterNumbers::THIRTEEN)),
+                        );
+
+                        return tokens;
+                    }
+                    _ => panic!("Invalid instruction"),
+                };
+            }
+        }
+    }
+
+    tokens
+}
+
+fn is_push_pop_istr(token: &InstructionName) -> bool {
+    matches!(token, InstructionName::PUSH | InstructionName::POP)
 }

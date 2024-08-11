@@ -16,6 +16,28 @@ Elf Header:
 Section headers:
 
   - Null section: should I put it manually or is it put automatically?
+    - manually
+
+  - Section entries settable before writing to file:
+    - sh_type
+    - sh_flags
+    - sh_addr (always zero for relocatable files)
+    - sh_size
+    - sh_addralign
+    - sh_entsize
+  - Section entries not settable before writing to file:
+    - sh_name
+    - sh_offset
+    - sh_link
+    - sh_info
+
+For sh_{link, info}:
+  - SHT_REL or SHT_RELA
+    - sh_link: The section header index of the associated symbol table.
+    - sh_info: The section header index of the section to which the relocation applies.
+  - SHT_SYMTAB or SHT_DYNSYM
+    - sh_link: This information is operating system specific.
+    - sh_info: This information is operating system specific.
 
 | Offset | Field          | Value         |
 |--------|----------------|---------------|
@@ -253,7 +275,6 @@ Section headers:
 | 0x20   | sh_addralign   | 0x4                        |
 | 0x24   | sh_entsize     | 0x8                        |
 
-### Elf_Shdr 17
 
 | Offset | Field          | Value                      |
 |--------|----------------|----------------------------|
@@ -281,4 +302,30 @@ Section headers:
 | 0x1c   | sh_info        | 0x14                       |
 | 0x20   | sh_addralign   | 0x4                        |
 | 0x24   | sh_entsize     | 0x10                       |
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 9 -> .strtab               |
+| 0x4    | sh_type        | SHT_STRTAB                 |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2424                     |
+| 0x14   | sh_size        | 0xf8                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
+
+| Offset | Field          | Value                      |
+|--------|----------------|----------------------------|
+| 0x0    | sh_name        | 17 -> .shstrtab            |
+| 0x4    | sh_type        | SHT_STRTAB                 |
+| 0x8    | sh_flags       | -                          |
+| 0xc    | sh_addr        | 0                          |
+| 0x10   | sh_offset      | 0x2d54                     |
+| 0x14   | sh_size        | 0xae                       |
+| 0x18   | sh_link        | 0                          |
+| 0x1c   | sh_info        | 0                          |
+| 0x20   | sh_addralign   | 0x1                        |
+| 0x24   | sh_entsize     | 0                          |
 

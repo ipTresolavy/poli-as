@@ -32,6 +32,28 @@ impl Token {
     pub fn is_instruction(&self) -> bool {
         matches!(self, Token::INSTRUCTION(_))
     }
+
+    pub fn is_directive(&self) -> bool {
+        matches!(self, Token::DIRECTIVE(_))
+    }
+
+    pub fn extract_directive(&self) -> Option<&Directive> {
+        match self {
+            Token::DIRECTIVE(directive) => Some(directive),
+            _ => None,
+        }
+    }
+
+    pub fn is_number(&self) -> bool {
+        matches!(self, Token::NUMBER(_))
+    }
+
+    pub fn extract_number(&self) -> Option<&Number> {
+        match self {
+            Token::NUMBER(number) => Some(number),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug)]

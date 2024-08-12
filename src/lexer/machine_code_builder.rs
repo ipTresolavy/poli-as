@@ -26,6 +26,19 @@ impl MachineCodeInstruction {
         self.bits[position as usize].value = value;
     }
 
+    pub fn to_u8_buff(&self) -> Vec<u8> {
+        let mut buff = Vec::new();
+        for i in 0..4 {
+            let mut byte = 0;
+            for j in 0..8 {
+                if self.bits[i * 8 + j].value {
+                    byte |= 1 << j;
+                }
+            }
+            buff.push(byte);
+        }
+        buff
+    }
     pub fn push_mask(&mut self, mask: u32, value: u32) {
         for i in 0..32 {
             if mask & (1 << i) != 0 {

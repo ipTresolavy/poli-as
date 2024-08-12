@@ -46,10 +46,31 @@ impl Assembler {
             }
         }
         if has_instruction(&line) {
-            let operation = self.lexer.parse_line(line);
+            let op = self.lexer.parse_line(line).unwrap();
+
+            op.to_machine_code().to_u8_buff();
+        } else if has_word_directive(&line) {
+            self.parse_word_directive(&line);
         } else {
-            println!("{:?}", &line);
         }
+    }
+
+    fn parse_word_directive(&self, line: &[Token]) -> Vec<u8> {
+        let words = line
+            .iter()
+            .filter(|token| token.is_number())
+            .map(|token| token.extract_number().unwrap().value)
+            .collect::<Vec<u32>>();
+
+        // Collect them in a u8 buffer
+        let mut buffer = vec![];
+        for word in words {
+            buffer.push((word >> 24) as u8);
+            buffer.push((word >> 16) as u8);
+            buffer.push((word >> 8) as u8);
+            buffer.push(word as u8);
+        }
+        buffer
     }
 
     fn change_section(&mut self, directive: &Directive) {
@@ -70,4 +91,12 @@ fn is_section_directive(token: &str) -> bool {
 
 fn has_instruction(line: &[Token]) -> bool {
     line.iter().any(|token| token.is_instruction())
+}
+
+fn has_word_directive(line: &[Token]) -> bool {
+    line.iter().any(|token| {
+        token
+            .extract_directive()
+            .map_or(false, |d| d.value == ".word")
+    })
 }

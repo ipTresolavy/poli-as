@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::tokenizer::Tokenizer;
 
-#[derive(Hash, Eq, PartialEq, Debug)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone)]
 pub struct Symbol {
     pub name: String,
 }
@@ -13,7 +13,7 @@ impl Symbol {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Address {
     pub value: u32,
 }
@@ -24,8 +24,26 @@ impl Address {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SymbolTable(HashMap<Symbol, Address>);
+
+impl SymbolTable {
+    pub fn new() -> Self {
+        SymbolTable(HashMap::new())
+    }
+
+    pub fn get_address(&self, symbol: &str) -> Option<&Address> {
+        let symbol = Symbol::new(symbol.to_string());
+
+        self.0.get(&symbol)
+    }
+}
+
+impl Default for SymbolTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub struct Symbolizer {
     pub symbol_table: SymbolTable,
@@ -74,10 +92,5 @@ impl Symbolizer {
         }
 
         self.symbol_table.0.insert(symbol, address);
-    }
-    pub fn get_address(&self, symbol: &str) -> Option<&Address> {
-        let symbol = Symbol::new(symbol.to_string());
-
-        self.symbol_table.0.get(&symbol)
     }
 }

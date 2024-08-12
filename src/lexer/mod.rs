@@ -1,3 +1,5 @@
+use symbolizer::SymbolTable;
+
 use crate::{
     token::{
         immediate::Immediate,
@@ -30,11 +32,11 @@ pub mod symbolizer;
 
 pub struct Lexer {
     tokenizer: Tokenizer,
-    symbol_table: Symbolizer,
+    symbol_table: SymbolTable,
 }
 
 impl Lexer {
-    pub fn new(tokenizer: Tokenizer, symbol_table: Symbolizer) -> Self {
+    pub fn new(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Self {
         Lexer {
             tokenizer,
             symbol_table,
@@ -158,7 +160,7 @@ pub fn is_move_op(token: &InstructionName) -> bool {
     )
 }
 
-fn replace_label_ref(tokens: &mut [Token], symbol_table: &Symbolizer) {
+fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable) {
     for token in tokens.iter_mut() {
         if let Token::LABELREF(label) = token {
             let address = symbol_table.get_address(label);

@@ -1,9 +1,9 @@
 use lexer::symbolizer::Symbolizer;
 use reader::Reader;
-use utils::debug_u32;
 
 use crate::tokenizer::Tokenizer;
 
+pub mod assembler;
 pub mod elf;
 pub mod emulator;
 pub mod lexer;
@@ -25,7 +25,7 @@ fn main() {
 
     let tokenizer = Tokenizer::new(reader);
 
-    let mut lexer = lexer::Lexer::new(tokenizer, symbolizer);
+    let mut lexer = lexer::Lexer::new(tokenizer, symbolizer.symbol_table);
 
     let program = lexer.parse();
 

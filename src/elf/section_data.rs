@@ -17,6 +17,10 @@ impl SectionData {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn add_symbol(
         &mut self,
         section_id: usize,

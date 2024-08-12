@@ -1,3 +1,5 @@
+// TODO: checar como vai ser a configuração das seções de texto e dados (little-endia enforçado
+// pela lib ou por nós?)
 use object::elf::SHF_ALLOC;
 use object::elf::SHF_EXECINSTR;
 use object::elf::SHF_INFO_LINK;

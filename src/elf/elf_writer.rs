@@ -10,9 +10,7 @@ use object::elf::SHT_PROGBITS;
 use object::elf::SHT_REL;
 use object::elf::SHT_STRTAB;
 use object::elf::SHT_SYMTAB;
-use object::write::elf::Rel;
 use object::write::elf::SectionHeader;
-use object::write::elf::Sym;
 use object::write::{Object, StreamingBuffer};
 use object::{Architecture, Endianness};
 use std::fs::File;
@@ -24,7 +22,7 @@ use super::section_data::SectionData;
 pub struct ElfWriter<'a> {
     object: Object<'a>,
     streaming_buffer: StreamingBuffer<BufWriter<File>>,
-    section_headers: Vec<(String, SectionHeader, SectionData)>,
+    section_headers: Vec<(usize, String, SectionHeader, SectionData)>,
 }
 
 impl<'a> ElfWriter<'a> {
@@ -42,56 +40,7 @@ impl<'a> ElfWriter<'a> {
         }
     }
 
-    pub fn add_symbol_to_section_data(
-        section_data: &mut SectionData,
-        symbol_name: String,
-        st_value: u32,
-        st_size: u32,
-        st_info: u8,
-        st_shndx: Option<u16>,
-    ) -> bool {
-        let vec = match section_data {
-            SectionData::Symbols(v) => v,
-            _ => return false,
-        };
-        let sym = Sym {
-            name: None,
-            section: None,
-            st_info,
-            st_other: 0,
-            st_shndx: st_shndx.unwrap_or(0),
-            st_value: st_value as u64,
-            st_size: st_size as u64,
-        };
-
-        vec.push((symbol_name, st_shndx.is_some(), sym));
-        true
-    }
-
-    pub fn add_relocation_entry_to_section_data(
-        section_data: &mut SectionData,
-        referenced_symbol_name: String,
-        r_offset: u32,
-        r_sym: Option<u32>,
-        r_type: u32,
-    ) -> bool {
-        let vec = match section_data {
-            SectionData::RelocationEntries(v) => v,
-            _ => return false,
-        };
-
-        let rel_ent = Rel {
-            r_offset: r_offset as u64,
-            r_sym: r_sym.unwrap_or(0),
-            r_type,
-            r_addend: 0,
-        };
-
-        vec.push((referenced_symbol_name, r_sym.is_some(), rel_ent));
-        true
-    }
-
-    pub fn add_section(&mut self, sh_name: String, data: SectionData) {
+    pub fn add_section(&mut self, section_id: usize, sh_name: String, data: SectionData) {
         let sh_type = match sh_name.as_str() {
             ".text" | ".data" | ".rodata" | ".comment" => SHT_PROGBITS,
             ".bss" => SHT_NOBITS,
@@ -148,15 +97,17 @@ impl<'a> ElfWriter<'a> {
             if let Some(pos) = self
                 .section_headers
                 .iter()
-                .position(|(name, _, _)| sh_name.ends_with(name.as_str()))
+                .position(|(_, name, _, _)| sh_name.ends_with(name.as_str()))
             {
                 self.section_headers
-                    .insert(pos + 1, (sh_name, section_header, data));
+                    .insert(pos + 1, (section_id, sh_name, section_header, data));
             } else {
-                self.section_headers.push((sh_name, section_header, data));
+                self.section_headers
+                    .push((section_id, sh_name, section_header, data));
             }
         } else {
-            self.section_headers.push((sh_name, section_header, data));
+            self.section_headers
+                .push((section_id, sh_name, section_header, data));
         }
     }
 }

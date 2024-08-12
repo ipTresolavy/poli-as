@@ -10,7 +10,6 @@ use object::elf::SHT_PROGBITS;
 use object::elf::SHT_REL;
 use object::elf::SHT_STRTAB;
 use object::elf::SHT_SYMTAB;
-use object::elf::STB_LOCAL;
 use object::write::elf::Rel;
 use object::write::elf::SectionHeader;
 use object::write::elf::Sym;
@@ -19,22 +18,7 @@ use object::{Architecture, Endianness};
 use std::fs::File;
 use std::io::BufWriter;
 
-#[derive(Debug)]
-pub enum SectionData {
-    Bytes(Vec<u8>),
-    Symbols(Vec<(String, bool, Sym)>),
-    RelocationEntries(Vec<(String, Rel)>),
-}
-
-impl SectionData {
-    pub fn len(&self) -> usize {
-        match self {
-            SectionData::Bytes(v) => v.len(),
-            SectionData::RelocationEntries(v) => v.len(),
-            SectionData::Symbols(v) => v.len(),
-        }
-    }
-}
+use super::section_data::SectionData;
 
 #[derive(Debug)]
 pub struct ElfWriter<'a> {
@@ -59,7 +43,6 @@ impl<'a> ElfWriter<'a> {
     }
 
     pub fn add_symbol_to_section_data(
-        &mut self,
         section_data: &mut SectionData,
         symbol_name: String,
         st_value: u32,
@@ -82,6 +65,29 @@ impl<'a> ElfWriter<'a> {
         };
 
         vec.push((symbol_name, st_shndx.is_some(), sym));
+        true
+    }
+
+    pub fn add_relocation_entry_to_section_data(
+        section_data: &mut SectionData,
+        referenced_symbol_name: String,
+        r_offset: u32,
+        r_sym: Option<u32>,
+        r_type: u32,
+    ) -> bool {
+        let vec = match section_data {
+            SectionData::RelocationEntries(v) => v,
+            _ => return false,
+        };
+
+        let rel_ent = Rel {
+            r_offset: r_offset as u64,
+            r_sym: r_sym.unwrap_or(0),
+            r_type,
+            r_addend: 0,
+        };
+
+        vec.push((referenced_symbol_name, r_sym.is_some(), rel_ent));
         true
     }
 

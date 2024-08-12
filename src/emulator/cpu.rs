@@ -50,7 +50,6 @@ impl Cpu {
     pub fn run(&mut self) {
         loop {
             self.cycle();
-            println!("{:?}", self.regs);
         }
     }
 

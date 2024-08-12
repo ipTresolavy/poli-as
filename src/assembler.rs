@@ -48,6 +48,7 @@ impl Assembler {
         if has_instruction(&line) {
             let op = self.lexer.parse_line(line).unwrap();
 
+            println!("{:?}", op.to_machine_code().to_debug_string());
             op.to_machine_code().to_u8_buff();
         } else if has_word_directive(&line) {
             self.parse_word_directive(&line);

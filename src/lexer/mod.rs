@@ -162,7 +162,7 @@ fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
         let (instruction, operands) = tokens.split_at_mut(index + 1);
         let instruction = instruction.last().unwrap();
         if let Token::INSTRUCTION(instruction) = instruction {
-            if is_push_pop_istr(&instruction.value) {
+            if is_pseudo_istr(&instruction.value) {
                 match instruction.value {
                     InstructionName::PUSH => {
                         let istr = Instruction::new(
@@ -200,6 +200,21 @@ fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
 
                         return tokens;
                     }
+                    InstructionName::LSL
+                    | InstructionName::LSR
+                    | InstructionName::ROR
+                    | InstructionName::ASR => {
+                        let mov =
+                            Instruction::new("mov", None, Some(instruction.condition.to_string()))
+                                .unwrap();
+
+                        let istr = instruction.clone();
+
+                        tokens[index] = Token::INSTRUCTION(mov);
+                        tokens.insert(tokens.len() - 1, Token::INSTRUCTION(istr));
+
+                        return tokens;
+                    }
                     _ => panic!("Invalid instruction"),
                 };
             }
@@ -209,6 +224,14 @@ fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
     tokens
 }
 
-fn is_push_pop_istr(token: &InstructionName) -> bool {
-    matches!(token, InstructionName::PUSH | InstructionName::POP)
+fn is_pseudo_istr(token: &InstructionName) -> bool {
+    matches!(
+        token,
+        InstructionName::PUSH
+            | InstructionName::POP
+            | InstructionName::LSL
+            | InstructionName::LSR
+            | InstructionName::ROR
+            | InstructionName::ASR
+    )
 }

@@ -1,7 +1,6 @@
 use crate::{
     emulator::regs::CpuRegisters,
     token::{instruction_name::InstructionName, register::Register, Token},
-    utils::debug_u32,
 };
 
 #[derive(Debug, Copy, Clone)]

@@ -78,7 +78,7 @@ impl Cpu {
             }
             Expression::TwoRegsLiteral(expr) => {
                 let rn = self.regs.get(expr.reg_m.to_num());
-                let rm = expr.literal.number as u32;
+                let rm = expr.literal.number;
                 let result = calculate_logical_expr(istr.value, rn, rm, None, &self.regs);
                 self.regs.set(expr.reg_d.to_num(), result.0);
 

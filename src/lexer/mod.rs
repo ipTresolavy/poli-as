@@ -159,7 +159,7 @@ fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
         .position(|token| matches!(token, Token::INSTRUCTION(_)));
 
     if let Some(index) = index {
-        let (instruction, operands) = tokens.split_at_mut(index + 1);
+        let (instruction, _) = tokens.split_at_mut(index + 1);
         let instruction = instruction.last().unwrap();
         if let Token::INSTRUCTION(instruction) = instruction {
             if is_pseudo_istr(&instruction.value) {
@@ -208,7 +208,7 @@ fn replace_pseudo_ops(mut tokens: Vec<Token>) -> Vec<Token> {
                             Instruction::new("mov", None, Some(instruction.condition.to_string()))
                                 .unwrap();
 
-                        let istr = instruction.clone();
+                        let istr = *instruction;
 
                         tokens[index] = Token::INSTRUCTION(mov);
                         tokens.insert(tokens.len() - 1, Token::INSTRUCTION(istr));

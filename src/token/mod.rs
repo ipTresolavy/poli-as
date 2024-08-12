@@ -1,3 +1,5 @@
+use immediate::ImmediateBase;
+
 use self::{immediate::Immediate, instruction::Instruction, register::Register};
 
 pub mod immediate;
@@ -26,6 +28,12 @@ pub enum Token {
     EOF,
 }
 
+impl Token {
+    pub fn is_instruction(&self) -> bool {
+        matches!(self, Token::INSTRUCTION(_))
+    }
+}
+
 #[derive(Debug)]
 pub struct Label {
     pub value: String,
@@ -38,13 +46,38 @@ impl Label {
 
 #[derive(Debug)]
 pub struct Number {
-    pub value: u8,
+    pub value: u32,
 }
 
 impl Number {
-    pub fn new(value: u8) -> Self {
-        Self { value }
+    pub fn new(value: &str) -> Option<Self> {
+        let base = determine_base(&value)?;
+
+        let number: u32 = match base {
+            ImmediateBase::HEX => u32::from_str_radix(value.trim_start_matches("0x"), 16).ok()?,
+            ImmediateBase::DEC => (value.parse::<i32>().ok()?) as u32,
+            ImmediateBase::OCT => u32::from_str_radix(value.trim_start_matches("0o"), 8).ok()?,
+            ImmediateBase::BIN => u32::from_str_radix(value.trim_start_matches("0b"), 2).ok()?,
+        };
+
+        Some(Number { value: number })
     }
+}
+
+fn determine_base(val: &str) -> Option<ImmediateBase> {
+    if val.starts_with("0x") {
+        return Some(ImmediateBase::HEX);
+    }
+
+    if val.starts_with("0b") {
+        return Some(ImmediateBase::BIN);
+    }
+
+    if val.starts_with("0o") {
+        return Some(ImmediateBase::OCT);
+    }
+
+    Some(ImmediateBase::DEC)
 }
 
 #[derive(Debug)]

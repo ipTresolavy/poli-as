@@ -45,7 +45,7 @@ impl Tokenizer {
 
     fn split_at_separators(&self, line: &str) -> Vec<String> {
         // Another day another regex i want to kill myself over
-        let re = Regex::new(r"(\d+)|(r\d+)|(\{|\})|(\[|\])|(-)|(!)|(=)|(\.[a-zA-Z]+)|(#0x\d+|#0b\d+|#0d\d+|#-?\d+)|([a-zA-Z\_\-]+:)|([a-zA-Z\_\-]+)").unwrap();
+        let re = Regex::new(r"(r\d+)|(\{|\})|(\[|\])|(-)|(!)|(=)|(\.[a-zA-Z]+)|(#0x\d+|#0b\d+|#0d\d+|#-?\d+)|(0x\d+|0b\d+|0d\d+|-?\d+)|([a-zA-Z\_\-]+:)|([a-zA-Z\_\-]+) ").unwrap();
         let matches: Vec<String> = re
             .captures_iter(line)
             .filter_map(|caps| {
@@ -100,8 +100,13 @@ impl Tokenizer {
             return Token::COMMA;
         }
 
-        if let Ok(number) = literal.parse::<u8>() {
-            return Token::NUMBER(Number::new(number));
+        if is_number(&literal) {
+            let number = Number::new(&literal);
+
+            if let Some(number) = number {
+                return Token::NUMBER(number);
+            }
+            return Token::ILLEGAL;
         }
 
         if literal.starts_with('#') {
@@ -216,4 +221,9 @@ fn second_char_is_number(str: &str) -> bool {
 
 fn is_special_reg(str: &str) -> bool {
     str == "sp" || str == "lr" || str == "pc"
+}
+
+fn is_number(str: &str) -> bool {
+    let re = Regex::new(r"^(0x\d+|0b\d+|0d\d+|-?\d+)$").expect("regex should be valid");
+    re.is_match(str)
 }

@@ -1,5 +1,5 @@
 use crate::{
-    lexer::symbolizer::SymbolTable,
+    lexer::{symbolizer::SymbolTable, Lexer},
     token::{Directive, Token},
     tokenizer::Tokenizer,
 };
@@ -13,12 +13,15 @@ pub enum Section {
 pub struct Assembler {
     pub symbol_table: SymbolTable,
     pub tokenizer: Tokenizer,
+    lexer: Lexer,
     current_section: Section,
 }
 
 impl Assembler {
     pub fn new(tokenizer: Tokenizer, symbol: SymbolTable) -> Self {
+        let lexer = Lexer::new(symbol.clone());
         Assembler {
+            lexer,
             symbol_table: symbol,
             tokenizer,
             current_section: Section::Text,
@@ -41,7 +44,11 @@ impl Assembler {
             if is_section_directive(&directive.value) {
                 self.change_section(directive);
             }
+        }
+        if has_instruction(&line) {
+            let operation = self.lexer.parse_line(line);
         } else {
+            println!("{:?}", &line);
         }
     }
 
@@ -59,4 +66,8 @@ impl Assembler {
 
 fn is_section_directive(token: &str) -> bool {
     token == ".text" || token == ".data" || token == ".bss"
+}
+
+fn has_instruction(line: &[Token]) -> bool {
+    line.iter().any(|token| token.is_instruction())
 }

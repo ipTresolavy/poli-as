@@ -25,18 +25,7 @@ fn main() {
 
     let tokenizer = Tokenizer::new(reader);
 
-    let mut lexer = lexer::Lexer::new(tokenizer, symbolizer.symbol_table);
+    let mut assembler = assembler::Assembler::new(tokenizer, symbolizer.symbol_table);
 
-    let program = lexer.parse();
-
-    for op in program {
-        let res = op.to_machine_code();
-
-        println!("{:?}", res.to_debug_string());
-    }
-
-    // let mut cpu = emulator::cpu::Cpu::new();
-    //
-    // cpu.load_program(program);
-    // cpu.run();
+    assembler.assemble();
 }

@@ -21,7 +21,6 @@ use self::{
         branch_op::{is_branch_op, parse_branch_op},
         load_store_op::{is_load_store_op, parse_load_store_op},
     },
-    symbolizer::Symbolizer,
 };
 
 pub mod cpu_op;
@@ -31,33 +30,15 @@ pub mod operations;
 pub mod symbolizer;
 
 pub struct Lexer {
-    tokenizer: Tokenizer,
     symbol_table: SymbolTable,
 }
 
 impl Lexer {
-    pub fn new(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Self {
-        Lexer {
-            tokenizer,
-            symbol_table,
-        }
+    pub fn new(symbol_table: SymbolTable) -> Self {
+        Lexer { symbol_table }
     }
 
-    pub fn parse(&mut self) -> Vec<CpuOperation> {
-        let mut operations = Vec::new();
-        while !self.tokenizer.is_eof() {
-            let op = self.parse_line();
-
-            if let Some(op) = op {
-                operations.push(op);
-            }
-        }
-        operations
-    }
-
-    fn parse_line(&mut self) -> Option<CpuOperation> {
-        let mut tokens = self.tokenizer.consume_line();
-
+    pub fn parse_line(&self, mut tokens: Vec<Token>) -> Option<CpuOperation> {
         if tokens.is_empty() {
             return None;
         }
@@ -97,6 +78,7 @@ impl Lexer {
 
 // Keep in mind we make a copy of the expressions in memory
 fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
+    println!("{:?}", operands);
     match operands {
         [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n), rest @ ..] => {
             let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);

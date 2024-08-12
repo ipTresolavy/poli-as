@@ -18,14 +18,14 @@ Section headers:
   - Null section: should I put it manually or is it put automatically?
     - manually
 
-  - Section entries settable before writing to file:
+  - Section header entries settable before writing to file:
     - sh_type
     - sh_flags
     - sh_addr (always zero for relocatable files)
     - sh_size
     - sh_addralign
     - sh_entsize
-  - Section entries not settable before writing to file:
+  - Section header entries not settable before writing to file:
     - sh_name
     - sh_offset
     - sh_link
@@ -36,8 +36,8 @@ For sh_{link, info}:
     - sh_link: The section header index of the associated symbol table.
     - sh_info: The section header index of the section to which the relocation applies.
   - SHT_SYMTAB or SHT_DYNSYM
-    - sh_link: This information is operating system specific.
-    - sh_info: This information is operating system specific.
+    - sh_link: The section header index of the associated string table.
+    - sh_info: One more than the symbol table index of the last local symbol (the last one with binding STB_LOCAL).
 
 | Offset | Field          | Value         |
 |--------|----------------|---------------|
@@ -245,8 +245,6 @@ For sh_{link, info}:
 | 0x20   | sh_addralign   | 0x1                        |
 | 0x24   | sh_entsize     | 0x1                        |
 
-### Elf_Shdr 15
-
 | Offset | Field          | Value                      |
 |--------|----------------|----------------------------|
 | 0x0    | sh_name        | 145 -> .debug_frame        |
@@ -259,8 +257,6 @@ For sh_{link, info}:
 | 0x1c   | sh_info        | 0                          |
 | 0x20   | sh_addralign   | 0x4                        |
 | 0x24   | sh_entsize     | 0                          |
-
-### Elf_Shdr 16
 
 | Offset | Field          | Value                      |
 |--------|----------------|----------------------------|
@@ -328,4 +324,34 @@ For sh_{link, info}:
 | 0x1c   | sh_info        | 0                          |
 | 0x20   | sh_addralign   | 0x1                        |
 | 0x24   | sh_entsize     | 0                          |
+
+
+- Symbols
+  - Symbol table entries' parameters settable before writing to file:
+    - st_value
+      - 0 for simple labels---(STB_{LOCAL, GLOBAL}, STT_NOTYPE) most of the time
+      - settable for section names also (STT_SECTION)
+      - settable for .set directives also (will be the value set by directive) (STT_NOTYPE)
+      - $a is beginning and $d is end (not last inst addr)
+    - st_size
+      - 0 for STT_NOTYPE
+    - st_info
+      - (STB_{LOCAL, GLOBAL}, STT_NOTYPE) 
+    - st_other
+      - always 0
+    - st_shndx
+      - 0 for undefined labels
+      - 65521 for .set directives
+  - Symbol table entries' parameters not settable before writing to file:
+    - st_shndx
+      - section header index for defined labels and section symbols
+
+- Relocation Entries
+
+- Are going to be set mainly when unsolved labels are found :)
+- Also used with bx lr :(
+
+  - Relocation entries parameters settable before writing to file:
+    - r_offset: offset in the section (section is defined in sh_link of the relocatable section)
+    - r_info: string (empty for bx lr) and value (40 for bx lr, 28 for undefined symbol)
 

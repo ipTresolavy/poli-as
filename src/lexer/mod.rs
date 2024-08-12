@@ -1,14 +1,11 @@
 use symbolizer::SymbolTable;
 
-use crate::{
-    token::{
-        immediate::Immediate,
-        instruction::Instruction,
-        instruction_name::InstructionName,
-        register::{Register, RegisterNumbers},
-        Token,
-    },
-    tokenizer::Tokenizer,
+use crate::token::{
+    immediate::Immediate,
+    instruction::Instruction,
+    instruction_name::InstructionName,
+    register::{Register, RegisterNumbers},
+    Token,
 };
 
 use self::{
@@ -78,7 +75,6 @@ impl Lexer {
 
 // Keep in mind we make a copy of the expressions in memory
 fn parse_logical_arithmatic_op(operands: &[Token]) -> Expression {
-    println!("{:?}", operands);
     match operands {
         [Token::REGISTER(reg_d), Token::REGISTER(reg_m), Token::REGISTER(reg_n), rest @ ..] => {
             let barrel_shifter = expression::barrel_shifter::BarrelShifterExpression::new(rest);

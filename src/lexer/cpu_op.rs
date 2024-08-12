@@ -206,7 +206,7 @@ impl CpuOperation {
         instruction: &Instruction,
         expr: &LoadStoreMultipleExpression,
     ) -> u32 {
-        let istr: u32 = 1 << 27;
+        let istr: u32 = 1 << 27 | 1 << 21;
         let base: u32 = (expr.base.to_num() as u32) << 16;
         let write_back = if expr.write_back { 1 << 21 } else { 0 };
         let save_spsr = if instruction.save_register {

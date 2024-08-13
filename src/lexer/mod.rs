@@ -152,9 +152,10 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable, current_a
                 panic!("Label {} not found in symbol table", label);
             }
 
-            let immediate =
-                Immediate::new((address.unwrap().value - current_addr.to_owned() - 8).to_string())
-                    .unwrap();
+            let immediate = Immediate::new(
+                (address.unwrap().value as i32 - current_addr.to_owned() as i32 - 8).to_string(),
+            )
+            .unwrap();
 
             *token = Token::IMMEDIATE(immediate);
         }

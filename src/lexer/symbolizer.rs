@@ -1,6 +1,17 @@
 use std::collections::HashMap;
 
-use crate::tokenizer::Tokenizer;
+use crate::{
+    assembler::Section,
+    elf::section_data::{self, SectionData},
+    token::Directive,
+    tokenizer::Tokenizer,
+};
+
+#[derive(Debug, Clone)]
+pub enum Scope {
+    Global,
+    Local,
+}
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
 pub struct Symbol {
@@ -16,6 +27,8 @@ impl Symbol {
 #[derive(Debug, Clone)]
 pub struct TableRow {
     pub address: Address,
+    pub scope: Scope,
+    pub section: Section,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +55,20 @@ impl SymbolTable {
 
         self.0.get(&symbol).map(|row| &row.address)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&Symbol, &TableRow)> {
+        self.0.iter()
+    }
+
+    // pub fn to_section_data(&self) -> SectionData {
+    //     let mut section_data: SectionData = SectionData::Symbols(vec![]);
+    //
+    //     for (symbol, row) in &self.0 {
+    //         let _ = section_data.add_symbol(0, symbol.name.clone(), row.address.value, 0, 0, None);
+    //     }
+    //
+    //     section_data
+    // }
 }
 
 impl Default for SymbolTable {
@@ -54,6 +81,8 @@ pub struct Symbolizer {
     pub symbol_table: SymbolTable,
     tokenizer: Tokenizer,
     addr: u32,
+    current_scope: Scope,
+    current_section: Section,
 }
 
 impl Symbolizer {
@@ -62,6 +91,8 @@ impl Symbolizer {
             symbol_table: SymbolTable(HashMap::new()),
             tokenizer,
             addr: 0,
+            current_section: Section::Text,
+            current_scope: Scope::Local,
         }
     }
 
@@ -76,6 +107,15 @@ impl Symbolizer {
         use crate::token::Token;
 
         for token in &tokens {
+            if let Token::DIRECTIVE(label) = token {
+                if label.value == ".global" || label.value == "._global" {
+                    self.current_scope = Scope::Global;
+                } else if label.value == ".text" || label.value == ".data" || label.value == ".bss"
+                {
+                    self.change_section(label);
+                    self.current_scope = Scope::Local;
+                }
+            }
             if let Token::LABEL(label) = token {
                 let symbol = Symbol::new(label.value.clone());
                 let address = Address::new(self.addr);
@@ -96,8 +136,23 @@ impl Symbolizer {
             panic!("Symbol already exists in table");
         }
 
-        let row = TableRow { address };
+        let row = TableRow {
+            address,
+            scope: self.current_scope.clone(),
+            section: self.current_section.clone(),
+        };
 
         self.symbol_table.0.insert(symbol, row);
+    }
+
+    fn change_section(&mut self, directive: &Directive) {
+        let Directive { value } = directive;
+
+        match value.as_str() {
+            ".text" => self.current_section = Section::Text,
+            ".data" => self.current_section = Section::Data,
+            ".bss" => self.current_section = Section::Bss,
+            _ => panic!("Unknown section directive"),
+        };
     }
 }

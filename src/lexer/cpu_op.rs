@@ -100,7 +100,7 @@ impl CpuOperation {
 
     fn generate_proc(&self) -> u32 {
         let base: u32 = 0x00000000;
-        let save = match self.instruction.save_register {
+        let save = match self.instruction.set_flags {
             true => 1 << 20,
             false => 0,
         };
@@ -209,11 +209,7 @@ impl CpuOperation {
         let istr: u32 = 1 << 27 | 1 << 21;
         let base: u32 = (expr.base.to_num() as u32) << 16;
         let write_back = if expr.write_back { 1 << 21 } else { 0 };
-        let save_spsr = if instruction.save_register {
-            1 << 22
-        } else {
-            0
-        };
+        let save_spsr = if instruction.set_flags { 1 << 22 } else { 0 };
 
         let before_or_after = if after_istr(instruction) { 0 } else { 1 << 24 };
 

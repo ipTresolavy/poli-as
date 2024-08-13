@@ -3,19 +3,19 @@ use super::instruction_name::InstructionName;
 #[derive(Debug, Clone, Copy)]
 pub struct Instruction {
     pub value: InstructionName,
-    pub save_register: bool,
+    pub set_flags: bool,
     pub condition: ConditionCode,
 }
 
 impl Instruction {
     pub fn new(
         operation: &str,
-        save_reg: Option<&str>,
+        set_flags: Option<&str>,
         condition: Option<&str>,
     ) -> Option<Instruction> {
         let value = InstructionName::from_name(operation)?;
 
-        let save_register = matches!(save_reg, Some("s"));
+        let save_register = matches!(set_flags, Some("s"));
 
         let condition = match condition {
             Some(c) => ConditionCode::from_name(c)?,
@@ -24,7 +24,7 @@ impl Instruction {
 
         Some(Instruction {
             value,
-            save_register,
+            set_flags: save_register,
             condition,
         })
     }

@@ -28,25 +28,31 @@ pub mod symbolizer;
 
 pub struct Lexer {
     symbol_table: SymbolTable,
+    addr: u32,
 }
 
 impl Lexer {
     pub fn new(symbol_table: SymbolTable) -> Self {
-        Lexer { symbol_table }
+        Lexer {
+            symbol_table,
+            addr: 0,
+        }
     }
 
-    pub fn parse_line(&self, mut tokens: Vec<Token>) -> Option<CpuOperation> {
+    pub fn parse_line(&mut self, mut tokens: Vec<Token>) -> Option<CpuOperation> {
         if tokens.is_empty() {
             return None;
         }
 
         // first replace any labels with their addresses
-        replace_label_ref(&mut tokens, &self.symbol_table);
+        replace_label_ref(&mut tokens, &self.symbol_table, &mut self.addr);
         let mut tokens = replace_pseudo_ops(tokens);
 
         let index = tokens
             .iter()
             .position(|token| matches!(token, Token::INSTRUCTION(_)));
+
+        self.addr += 4;
 
         if let Some(index) = index {
             let (instruction, operands) = tokens.split_at_mut(index + 1);
@@ -138,7 +144,7 @@ pub fn is_move_op(token: &InstructionName) -> bool {
     )
 }
 
-fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable) {
+fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable, current_addr: &mut u32) {
     for token in tokens.iter_mut() {
         if let Token::LABELREF(label) = token {
             let address = symbol_table.get_address(label);
@@ -146,7 +152,9 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable) {
                 panic!("Label {} not found in symbol table", label);
             }
 
-            let immediate = Immediate::new(address.unwrap().value.to_string()).unwrap();
+            let immediate =
+                Immediate::new((address.unwrap().value - current_addr.to_owned() - 8).to_string())
+                    .unwrap();
 
             *token = Token::IMMEDIATE(immediate);
         }

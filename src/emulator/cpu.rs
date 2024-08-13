@@ -72,7 +72,7 @@ impl Cpu {
                 let result = calculate_logical_expr(istr.value, rn, rm, barrel_shifter, &self.regs);
                 self.regs.set(expr.reg_d.to_num(), result.0);
 
-                if istr.save_register {
+                if istr.set_flags {
                     self.regs.update_flags(result.0, &result.1);
                 }
             }
@@ -82,7 +82,7 @@ impl Cpu {
                 let result = calculate_logical_expr(istr.value, rn, rm, None, &self.regs);
                 self.regs.set(expr.reg_d.to_num(), result.0);
 
-                if istr.save_register {
+                if istr.set_flags {
                     self.regs.update_flags(result.0, &result.1);
                 }
             }

@@ -38,6 +38,7 @@ For sh_{link, info}:
   - SHT_SYMTAB or SHT_DYNSYM
     - sh_link: The section header index of the associated string table.
     - sh_info: One more than the symbol table index of the last local symbol (the last one with binding STB_LOCAL).
+  - otherwise, both are 0
 
 | Offset | Field          | Value         |
 |--------|----------------|---------------|

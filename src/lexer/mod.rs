@@ -39,6 +39,10 @@ impl Lexer {
         }
     }
 
+    pub fn increment_addr(&mut self, addr: u32) {
+        self.addr += addr;
+    }
+
     pub fn parse_line(&mut self, mut tokens: Vec<Token>) -> Option<CpuOperation> {
         if tokens.is_empty() {
             return None;
@@ -52,7 +56,7 @@ impl Lexer {
             .iter()
             .position(|token| matches!(token, Token::INSTRUCTION(_)));
 
-        self.addr += 4;
+        self.increment_addr(4);
 
         if let Some(index) = index {
             let (instruction, operands) = tokens.split_at_mut(index + 1);

@@ -14,6 +14,11 @@ impl Symbol {
 }
 
 #[derive(Debug, Clone)]
+pub struct TableRow {
+    pub address: Address,
+}
+
+#[derive(Debug, Clone)]
 pub struct Address {
     pub value: u32,
 }
@@ -25,7 +30,7 @@ impl Address {
 }
 
 #[derive(Debug, Clone)]
-pub struct SymbolTable(HashMap<Symbol, Address>);
+pub struct SymbolTable(HashMap<Symbol, TableRow>);
 
 impl SymbolTable {
     pub fn new() -> Self {
@@ -35,7 +40,7 @@ impl SymbolTable {
     pub fn get_address(&self, symbol: &str) -> Option<&Address> {
         let symbol = Symbol::new(symbol.to_string());
 
-        self.0.get(&symbol)
+        self.0.get(&symbol).map(|row| &row.address)
     }
 }
 
@@ -91,6 +96,8 @@ impl Symbolizer {
             panic!("Symbol already exists in table");
         }
 
-        self.symbol_table.0.insert(symbol, address);
+        let row = TableRow { address };
+
+        self.symbol_table.0.insert(symbol, row);
     }
 }

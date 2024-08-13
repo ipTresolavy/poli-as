@@ -56,7 +56,7 @@ impl Assembler {
         }
     }
 
-    fn parse_word_directive(&self, line: &[Token]) -> Vec<u8> {
+    fn parse_word_directive(&mut self, line: &[Token]) -> Vec<u8> {
         let words = line
             .iter()
             .filter(|token| token.is_number())
@@ -71,6 +71,9 @@ impl Assembler {
             buffer.push((word >> 8) as u8);
             buffer.push(word as u8);
         }
+
+        self.lexer.increment_addr((buffer.len() * 4) as u32);
+
         buffer
     }
 

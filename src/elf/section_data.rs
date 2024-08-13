@@ -5,7 +5,7 @@ use object::write::elf::Sym;
 pub type IntermediateSectionId = usize;
 pub type ReferencedSymbolId = usize;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SectionData {
     Bytes(Vec<u8>),
     Symbols(Vec<(IntermediateSectionId, String, bool, Sym)>),

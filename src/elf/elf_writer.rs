@@ -34,13 +34,20 @@ use super::section_data::IntermediateSectionId;
 use super::section_data::SectionData;
 
 #[derive(Debug)]
-pub struct ElfWriter<'a> {
-    object: Object<'a>,
+pub struct ElfWriter {
     sections: Vec<(IntermediateSectionId, String, SectionHeader, SectionData)>,
 }
 
-impl<'a> ElfWriter<'a> {
-    pub fn new() -> ElfWriter<'a> {
+impl Clone for ElfWriter {
+    fn clone(&self) -> ElfWriter {
+        ElfWriter {
+            sections: self.sections.clone(),
+        }
+    }
+}
+
+impl ElfWriter {
+    pub fn new() -> ElfWriter {
         let object = Object::new(
             object::BinaryFormat::Elf,
             Architecture::Arm,
@@ -48,7 +55,6 @@ impl<'a> ElfWriter<'a> {
         );
 
         ElfWriter {
-            object,
             sections: Vec::new(),
         }
     }
@@ -130,30 +136,6 @@ impl<'a> ElfWriter<'a> {
         section_id
     }
 
-    fn write_file_header(&self, writer: &mut Writer) -> bool {
-        //let file = File::create(file_name).expect("Was not able to create output file");
-        //let buf_writer = BufWriter::new(file);
-        //let mut streaming_buffer = StreamingBuffer::new(buf_writer);
-        //let mut writer = Writer::new(Endianness::Little, false, &mut streaming_buffer);
-
-        let file_header = FileHeader {
-            os_abi: ELFOSABI_SYSV,
-            abi_version: EV_CURRENT,
-            e_type: ET_REL,
-            e_machine: EM_ARM,
-            e_entry: 0,
-            e_flags: 0x5000000,
-        };
-
-        writer.reserve_file_header();
-        if let Err(e) = writer.write_file_header(&file_header) {
-            print!("Error while writing file header: {}", e);
-            return false;
-        }
-
-        true
-    }
-
     #[must_use]
     fn reserve_section_indexes<'b>(
         &'b mut self,
@@ -172,7 +154,7 @@ impl<'a> ElfWriter<'a> {
         let mut symbol_indexes: Vec<SymbolIndex> = Vec::new();
 
         section_indexes.push(writer.reserve_null_section_index());
-        writer.write_null_section_header();
+        //writer.write_null_section_header();
 
         for section in &mut self.sections {
             match section.2.sh_type {
@@ -221,11 +203,10 @@ impl<'a> ElfWriter<'a> {
         section_indexes: Vec<SectionIndex>,
         symbol_indexes: Vec<SymbolIndex>,
     ) -> bool {
-        // insert code here
         let mut updates = Vec::new();
 
         // First pass: Gather information with immutable borrow
-        for (i, section) in self.sections.iter().enumerate() {
+        for (i, section) in self.sections.clone().iter().enumerate() {
             if section.2.sh_type == SHT_REL || section.2.sh_type == SHT_RELA {
                 if let Some(target_section_name) = section.1.strip_prefix(".rel") {
                     if let Some((target_index, _)) = self
@@ -278,6 +259,39 @@ impl<'a> ElfWriter<'a> {
                     }
                 }
             }
+        }
+
+        true
+    }
+
+    fn reserve_ranges(&mut self, writer: &mut Writer) {
+        writer.reserve_file_header();
+        writer.reserve_section_headers();
+        writer.reserve_symtab();
+        writer.reserve_strtab();
+        writer.reserve_shstrtab();
+        for section in &mut self.sections {
+            if section.2.sh_type == SHT_REL || section.2.sh_type == SHT_RELA {
+                section.2.sh_offset = writer
+                    .reserve_relocations(section.3.len(), section.2.sh_type == SHT_RELA)
+                    as u64;
+            }
+        }
+    }
+
+    fn write_file_header(&self, writer: &mut Writer) -> bool {
+        let file_header = FileHeader {
+            os_abi: ELFOSABI_SYSV,
+            abi_version: EV_CURRENT,
+            e_type: ET_REL,
+            e_machine: EM_ARM,
+            e_entry: 0,
+            e_flags: 0x5000000,
+        };
+
+        if let Err(e) = writer.write_file_header(&file_header) {
+            print!("Error while writing file header: {}", e);
+            return false;
         }
 
         true

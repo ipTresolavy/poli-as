@@ -21,6 +21,7 @@ use object::elf::SHT_SYMTAB;
 use object::write::elf::FileHeader;
 use object::write::elf::SectionHeader;
 use object::write::elf::SectionIndex;
+use object::write::elf::SymbolIndex;
 use object::write::elf::Writer;
 use object::write::StringId;
 use object::write::{Object, StreamingBuffer};
@@ -106,20 +107,23 @@ impl<'a> ElfWriter<'a> {
             sh_entsize,
         };
 
-        let section_id = self.sections.len();
+        let section_id;
         if sh_name.starts_with(".rel") {
             if let Some(pos) = self
                 .sections
                 .iter()
                 .position(|(_, name, _, _)| sh_name.ends_with(name.as_str()))
             {
+                section_id = pos + 1;
                 self.sections
                     .insert(pos + 1, (section_id, sh_name, section_header, data));
             } else {
+                section_id = self.sections.len();
                 self.sections
                     .push((section_id, sh_name, section_header, data));
             }
         } else {
+            section_id = self.sections.len();
             self.sections
                 .push((section_id, sh_name, section_header, data));
         }
@@ -154,43 +158,68 @@ impl<'a> ElfWriter<'a> {
     fn reserve_section_indexes<'b>(
         &'b mut self,
         writer: &mut Writer<'b>,
-    ) -> (Vec<Option<StringId>>, Vec<SectionIndex>, Vec<StringId>) {
+    ) -> (
+        Vec<Option<StringId>>,
+        Vec<SectionIndex>,
+        Vec<StringId>,
+        Vec<SymbolIndex>,
+    ) {
         writer.require_strtab();
-        let mut section_name_ids: Vec<Option<StringId>> = Vec::new();
+
+        let mut section_name_indexes: Vec<Option<StringId>> = Vec::new();
         let mut section_indexes: Vec<SectionIndex> = Vec::new();
         let mut string_indexes: Vec<StringId> = Vec::new();
+        let mut symbol_indexes: Vec<SymbolIndex> = Vec::new();
+
         section_indexes.push(writer.reserve_null_section_index());
         writer.write_null_section_header();
+
         for section in &mut self.sections {
             match section.2.sh_type {
                 SHT_SYMTAB => {
-                    section_name_ids.push(None);
+                    // must be the last section
+                    section_name_indexes.push(None);
                     section_indexes.push(writer.reserve_symtab_section_index());
-                    if let SectionData::Symbols(sym_vec) = &section.3 {
+                    symbol_indexes.push(writer.reserve_null_symbol_index());
+                    if let SectionData::Symbols(sym_vec) = &mut section.3 {
                         for sym in sym_vec {
-                            string_indexes.push(writer.add_string(sym.1.as_bytes()));
+                            let symbol_name_index = writer.add_string(sym.1.as_bytes());
+                            sym.3.name = Some(symbol_name_index);
+                            string_indexes.push(symbol_name_index);
+                            symbol_indexes.push(writer.reserve_symbol_index(None));
+                            if !sym.2 {
+                                sym.3.section = Some(section_indexes[sym.0 + 1]);
+                                sym.3.st_shndx = section_indexes[sym.0 + 1].0 as u16;
+                            }
                         }
                     }
                 }
                 _ => {
-                    let section_name_id = writer.add_section_name(section.1.as_bytes());
-                    section_name_ids.push(Some(section_name_id));
-                    section.2.name = Some(section_name_id);
+                    let section_name_index = writer.add_section_name(section.1.as_bytes());
+                    section.2.name = Some(section_name_index);
+                    section_name_indexes.push(Some(section_name_index));
                     section_indexes.push(writer.reserve_section_index());
                 }
             };
         }
-        section_name_ids.push(None);
+
+        section_name_indexes.push(None);
         section_indexes.push(writer.reserve_strtab_section_index());
-        section_name_ids.push(None);
+        section_name_indexes.push(None);
         section_indexes.push(writer.reserve_shstrtab_section_index());
-        (section_name_ids, section_indexes, string_indexes)
+        (
+            section_name_indexes,
+            section_indexes,
+            string_indexes,
+            symbol_indexes,
+        )
     }
 
     fn solve_dependencies(
         &mut self,
         writer: &mut Writer,
         section_indexes: Vec<SectionIndex>,
+        symbol_indexes: Vec<SymbolIndex>,
     ) -> bool {
         // insert code here
         let mut updates = Vec::new();
@@ -242,6 +271,13 @@ impl<'a> ElfWriter<'a> {
             let section = &mut self.sections[i];
             section.2.sh_link = sh_link;
             section.2.sh_info = sh_info;
+            if let SectionData::RelocationEntries(rel_ents) = &mut section.3 {
+                for rel_ent in rel_ents {
+                    if !rel_ent.1 {
+                        rel_ent.2.r_sym = symbol_indexes[rel_ent.0 + 1].0 as u32;
+                    }
+                }
+            }
         }
 
         true

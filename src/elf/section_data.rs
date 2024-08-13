@@ -41,10 +41,10 @@ impl SectionData {
         };
         let sym = Sym {
             name: None,    // must be set later
-            section: None, // must be set later
+            section: None, // must be set later, if st_shndx is None
             st_info,
             st_other: 0,
-            st_shndx: st_shndx.unwrap_or(0), // must be set later if None
+            st_shndx: st_shndx.unwrap_or(0), // must be set later, if section is None
             st_value: st_value as u64,
             st_size: st_size as u64,
         };

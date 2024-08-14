@@ -34,6 +34,7 @@
           ++ (with pkgs; [
             pkg-config
             lazygit
+            gcc-arm-embedded-13
           ]);
         RUST_BACKTRACE = 1;
       };

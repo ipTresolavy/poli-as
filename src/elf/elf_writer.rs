@@ -364,11 +364,22 @@ impl ElfWriter {
     }
 
     pub fn write_elf(&mut self, file_name: String) {
-        let file = File::create(file_name).expect("Was not able to create output file");
+        let file = File::create(file_name.clone()).expect("Was not able to create output file");
         let buf_writer = BufWriter::new(file);
         let mut streaming_buffer = StreamingBuffer::new(buf_writer);
         let mut writer = Writer::new(Endianness::Little, false, &mut streaming_buffer);
-        let (_, section_indexes, _, symbol_indexes) = self.reserve_section_indexes(&mut writer);
+
+        let temp_file = File::create(file_name).expect("Was not able to create output file");
+        let temp_buf_writer = BufWriter::new(temp_file);
+        let mut temp_streaming_buffer = StreamingBuffer::new(temp_buf_writer);
+        let mut temp_writer = Writer::new(Endianness::Little, false, &mut temp_streaming_buffer);
+        let mut elf_clone = self.clone();
+
+        let (_, section_indexes, _, symbol_indexes) =
+            reserve_section_indexes(&mut elf_clone, &mut writer);
+
+        let (_, section_indexes, _, symbol_indexes) =
+            reserve_section_indexes(self, &mut temp_writer);
 
         if !self.solve_dependencies(&mut writer, section_indexes, symbol_indexes) {
             panic!("Couldn't solve dependencies");
@@ -378,4 +389,64 @@ impl ElfWriter {
         self.write_section_headers(&mut writer);
         self.write_section_data(&mut writer);
     }
+}
+
+#[must_use]
+fn reserve_section_indexes<'b>(
+    elf: &'b mut ElfWriter,
+    writer: &mut Writer<'b>,
+) -> (
+    Vec<Option<StringId>>,
+    Vec<SectionIndex>,
+    Vec<StringId>,
+    Vec<SymbolIndex>,
+) {
+    writer.require_strtab();
+
+    let mut section_name_indexes: Vec<Option<StringId>> = Vec::new();
+    let mut section_indexes: Vec<SectionIndex> = Vec::new();
+    let mut string_indexes: Vec<StringId> = Vec::new();
+    let mut symbol_indexes: Vec<SymbolIndex> = Vec::new();
+
+    section_indexes.push(writer.reserve_null_section_index());
+
+    for section in &mut elf.sections {
+        match section.2.sh_type {
+            SHT_SYMTAB => {
+                // must be the last section before relocations
+                section_name_indexes.push(None);
+                section_indexes.push(writer.reserve_symtab_section_index());
+                symbol_indexes.push(writer.reserve_null_symbol_index());
+                if let SectionData::Symbols(sym_vec) = &mut section.3 {
+                    for sym in sym_vec {
+                        let symbol_name_index = writer.add_string(sym.1.as_bytes());
+                        sym.3.name = Some(symbol_name_index);
+                        string_indexes.push(symbol_name_index);
+                        symbol_indexes.push(writer.reserve_symbol_index(None));
+                        if !sym.2 {
+                            sym.3.section = Some(section_indexes[sym.0 + 1]);
+                            sym.3.st_shndx = section_indexes[sym.0 + 1].0 as u16;
+                        }
+                    }
+                }
+            }
+            _ => {
+                let section_name_index = writer.add_section_name(section.1.as_bytes());
+                section.2.name = Some(section_name_index);
+                section_name_indexes.push(Some(section_name_index));
+                section_indexes.push(writer.reserve_section_index());
+            }
+        };
+    }
+
+    section_name_indexes.push(None);
+    section_indexes.push(writer.reserve_strtab_section_index());
+    section_name_indexes.push(None);
+    section_indexes.push(writer.reserve_shstrtab_section_index());
+    (
+        section_name_indexes,
+        section_indexes,
+        string_indexes,
+        symbol_indexes,
+    )
 }

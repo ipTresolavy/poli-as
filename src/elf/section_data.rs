@@ -26,6 +26,7 @@ impl SectionData {
         self.len() == 0
     }
 
+    #[must_use]
     pub fn add_symbol(
         &mut self,
         section_id: IntermediateSectionId,

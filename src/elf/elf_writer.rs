@@ -35,12 +35,14 @@ use super::section_data::SectionData;
 
 #[derive(Debug)]
 pub struct ElfWriter {
+    num_local: u32, // number of local references
     sections: Vec<(IntermediateSectionId, String, SectionHeader, SectionData)>,
 }
 
 impl Clone for ElfWriter {
     fn clone(&self) -> ElfWriter {
         ElfWriter {
+            num_local: 0,
             sections: self.sections.clone(),
         }
     }
@@ -55,6 +57,7 @@ impl ElfWriter {
         );
 
         ElfWriter {
+            num_local: 0,
             sections: Vec::new(),
         }
     }
@@ -154,12 +157,11 @@ impl ElfWriter {
         let mut symbol_indexes: Vec<SymbolIndex> = Vec::new();
 
         section_indexes.push(writer.reserve_null_section_index());
-        //writer.write_null_section_header();
 
         for section in &mut self.sections {
             match section.2.sh_type {
                 SHT_SYMTAB => {
-                    // must be the last section
+                    // must be the last section before relocations
                     section_name_indexes.push(None);
                     section_indexes.push(writer.reserve_symtab_section_index());
                     symbol_indexes.push(writer.reserve_null_symbol_index());
@@ -197,6 +199,7 @@ impl ElfWriter {
         )
     }
 
+    #[must_use]
     fn solve_dependencies(
         &mut self,
         writer: &mut Writer,
@@ -259,6 +262,10 @@ impl ElfWriter {
                     }
                 }
             }
+
+            if section.2.sh_type == SHT_SYMTAB {
+                self.num_local = section.2.sh_info;
+            }
         }
 
         true
@@ -267,16 +274,19 @@ impl ElfWriter {
     fn reserve_ranges(&mut self, writer: &mut Writer) {
         writer.reserve_file_header();
         writer.reserve_section_headers();
-        writer.reserve_symtab();
-        writer.reserve_strtab();
-        writer.reserve_shstrtab();
         for section in &mut self.sections {
             if section.2.sh_type == SHT_REL || section.2.sh_type == SHT_RELA {
                 section.2.sh_offset = writer
                     .reserve_relocations(section.3.len(), section.2.sh_type == SHT_RELA)
                     as u64;
+            } else if section.2.sh_type != SHT_SYMTAB {
+                section.2.sh_offset =
+                    writer.reserve(section.3.len(), section.2.sh_addralign as usize) as u64;
             }
         }
+        writer.reserve_symtab();
+        writer.reserve_strtab();
+        writer.reserve_shstrtab();
     }
 
     fn write_file_header(&self, writer: &mut Writer) -> bool {
@@ -295,5 +305,77 @@ impl ElfWriter {
         }
 
         true
+    }
+
+    fn write_section_headers(&self, writer: &mut Writer) {
+        self.write_file_header(writer);
+        writer.write_null_section_header();
+        for section in self.sections.clone() {
+            if section.2.sh_type == SHT_REL || section.2.sh_type == SHT_RELA {
+                writer.write_relocation_section_header(
+                    section.2.name.unwrap(),
+                    SectionIndex(section.2.sh_info),
+                    SectionIndex(section.2.sh_link),
+                    section.2.sh_offset as usize,
+                    section.3.len(),
+                    section.2.sh_type == SHT_RELA,
+                );
+            } else if section.2.sh_type != SHT_SYMTAB {
+                writer.write_section_header(&section.2);
+            }
+        }
+        writer.write_symtab_section_header(self.num_local);
+        writer.write_strtab_section_header();
+        writer.write_shstrtab_section_header();
+    }
+
+    fn write_section_data(&self, writer: &mut Writer) {
+        let mut symtab_index = 0;
+        for (i, section) in self.sections.clone().iter().enumerate() {
+            match section.2.sh_type {
+                SHT_REL | SHT_RELA => {
+                    if let SectionData::RelocationEntries(relocations) = &section.3 {
+                        for rel in relocations {
+                            writer.write_relocation(section.2.sh_type == SHT_RELA, &rel.2);
+                        }
+                    }
+                }
+                SHT_SYMTAB => {
+                    symtab_index = i;
+                }
+                _ => {
+                    if let SectionData::Bytes(vec) = &section.3 {
+                        writer.write(vec.as_slice());
+                    } else {
+                        panic!("section data is not SectionData::Bytes");
+                    }
+                }
+            }
+        }
+        if let SectionData::Symbols(sym_vec) = self.sections[symtab_index].3.clone() {
+            for (_, _, _, sym) in sym_vec {
+                writer.write_symbol(&sym);
+            }
+        } else {
+            panic!("couldn't read symbols from symtab");
+        }
+        writer.write_strtab();
+        writer.write_shstrtab();
+    }
+
+    pub fn write_elf(&mut self, file_name: String) {
+        let file = File::create(file_name).expect("Was not able to create output file");
+        let buf_writer = BufWriter::new(file);
+        let mut streaming_buffer = StreamingBuffer::new(buf_writer);
+        let mut writer = Writer::new(Endianness::Little, false, &mut streaming_buffer);
+        let (_, section_indexes, _, symbol_indexes) = self.reserve_section_indexes(&mut writer);
+
+        if !self.solve_dependencies(&mut writer, section_indexes, symbol_indexes) {
+            panic!("Couldn't solve dependencies");
+        }
+
+        self.reserve_ranges(&mut writer);
+        self.write_section_headers(&mut writer);
+        self.write_section_data(&mut writer);
     }
 }

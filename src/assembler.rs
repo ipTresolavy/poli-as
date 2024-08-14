@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use object::elf::{STB_GLOBAL, STT_NOTYPE};
+use object::elf::{STB_GLOBAL, STT_NOTYPE, STT_SECTION};
 
 use crate::{
     elf::{
@@ -41,6 +41,9 @@ pub struct SectionLookupTable(HashMap<String, usize>);
 #[derive(Debug, Clone)]
 pub struct SymbolLookupTable(HashMap<String, usize>);
 
+#[derive(Debug, Clone)]
+pub struct SectionSymbolLookupTable(HashMap<String, usize>);
+
 pub struct Assembler {
     pub symbol_table: SymbolTable,
     pub tokenizer: Tokenizer,
@@ -50,6 +53,7 @@ pub struct Assembler {
     buffer: Vec<u8>,
     section_lookup_table: SectionLookupTable,
     symbol_lookup_table: SymbolLookupTable,
+    section_symbol_lookup_table: SectionSymbolLookupTable,
     unknown_refs: UnknownRefs,
 }
 
@@ -65,6 +69,7 @@ impl Assembler {
             buffer: vec![],
             section_lookup_table: SectionLookupTable(HashMap::new()),
             symbol_lookup_table: SymbolLookupTable(HashMap::new()),
+            section_symbol_lookup_table: SectionSymbolLookupTable(HashMap::new()),
             unknown_refs: UnknownRefs { refs: vec![] },
         }
     }
@@ -117,6 +122,10 @@ impl Assembler {
         let id = self
             .elf_writer
             .add_section(self.current_section.to_name(), section_data);
+
+        self.section_symbol_lookup_table
+            .0
+            .insert(self.current_section.to_name(), id);
 
         self.section_lookup_table
             .0
@@ -174,6 +183,26 @@ impl Assembler {
 
     fn create_symbol_entry(&mut self) {
         let mut section_data = SectionData::Symbols(vec![]);
+
+        for section_symbol in self.section_symbol_lookup_table.0.iter() {
+            let section_id = self
+                .section_lookup_table
+                .clone()
+                .0
+                .get(section_symbol.0)
+                .unwrap()
+                .to_owned();
+
+            let _ = section_data.add_symbol(
+                section_id.to_owned(),
+                section_symbol.0.clone(),
+                0,
+                0,
+                STT_SECTION,
+                None,
+            );
+        }
+
         for symbol in self.symbol_table.iter() {
             let section_id = self
                 .section_lookup_table

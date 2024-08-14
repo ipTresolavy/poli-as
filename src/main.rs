@@ -21,8 +21,6 @@ fn main() {
 
     symbolizer.symbolize();
 
-    println!("{:?}", symbolizer.symbol_table);
-
     let reader = Reader::new("hello.txt");
 
     let tokenizer = Tokenizer::new(reader);

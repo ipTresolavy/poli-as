@@ -25,7 +25,7 @@ pub enum Section {
 }
 
 impl Section {
-    pub fn to_string(&self) -> String {
+    fn to_name(&self) -> String {
         match self {
             Section::Text => ".text".to_string(),
             Section::Data => ".data".to_string(),
@@ -82,7 +82,7 @@ impl Assembler {
 
         self.create_symbol_entry();
 
-        println!("{:?}", self.elf_writer);
+        self.elf_writer.write_elf("out.o".to_string());
     }
 
     fn parse_line(&mut self, line: Vec<Token>) {
@@ -106,7 +106,6 @@ impl Assembler {
             self.buffer.extend(&op.to_machine_code().to_u8_buff());
         } else if has_word_directive(&line) {
             self.parse_word_directive(&line);
-        } else {
         }
     }
 
@@ -117,11 +116,11 @@ impl Assembler {
         let section_data = section_data::SectionData::Bytes(self.buffer.clone());
         let id = self
             .elf_writer
-            .add_section(self.current_section.to_string(), section_data);
+            .add_section(self.current_section.to_name(), section_data);
 
         self.section_lookup_table
             .0
-            .insert(self.current_section.to_string(), id);
+            .insert(self.current_section.to_name(), id);
 
         self.clear_buffer();
     }
@@ -180,11 +179,11 @@ impl Assembler {
                 .section_lookup_table
                 .clone()
                 .0
-                .get(&symbol.1.section.to_string())
+                .get(&symbol.1.section.to_name())
                 .unwrap()
                 .to_owned();
 
-            section_data.add_symbol(
+            let _ = section_data.add_symbol(
                 section_id.to_owned(),
                 symbol.0.name.clone(),
                 symbol.1.address.value,
@@ -239,7 +238,7 @@ impl Assembler {
 
         for (i, section_data) in sections_data.iter().enumerate() {
             let _ = self.elf_writer.add_section(
-                ".rel".to_string() + &sections[i].to_string(),
+                ".rel".to_string() + &sections[i].to_name(),
                 section_data.clone(),
             );
         }

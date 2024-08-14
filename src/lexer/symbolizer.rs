@@ -1,11 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    assembler::Section,
-    elf::section_data::{self, SectionData},
-    token::Directive,
-    tokenizer::Tokenizer,
-};
+use crate::{assembler::Section, token::Directive, tokenizer::Tokenizer};
 
 #[derive(Debug, Clone)]
 pub enum Scope {

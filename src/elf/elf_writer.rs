@@ -17,6 +17,7 @@ use object::elf::SHT_REL;
 use object::elf::SHT_RELA;
 use object::elf::SHT_STRTAB;
 use object::elf::SHT_SYMTAB;
+use object::elf::STB_LOCAL;
 use object::write::elf::FileHeader;
 use object::write::elf::SectionHeader;
 use object::write::elf::SectionIndex;
@@ -176,10 +177,11 @@ impl ElfWriter {
                 // For SHT_SYMTAB, calculate sh_info based on the last local symbol
                 let sh_info = if section.2.sh_type == SHT_SYMTAB {
                     if let SectionData::Symbols(symbols) = &section.3 {
-                        let last_local_index =
-                            symbols.iter().rposition(|(_, _, is_local, _)| *is_local);
+                        let last_local_index = symbols
+                            .iter()
+                            .rposition(|(_, _, _, sym)| sym.st_info == STB_LOCAL);
                         if let Some(last_local_index) = last_local_index {
-                            last_local_index + 1
+                            last_local_index + 2
                         } else {
                             1 // No local symbols, so sh_info should be 1
                         }

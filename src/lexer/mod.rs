@@ -159,7 +159,8 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable, current_a
             }
 
             let immediate = Immediate::new(
-                (address.unwrap().value as i32 - current_addr.to_owned() as i32 - 8).to_string(),
+                ((address.unwrap().value as i32 - current_addr.to_owned() as i32 - 8) / 4)
+                    .to_string(),
             )
             .unwrap();
 

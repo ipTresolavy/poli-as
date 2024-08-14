@@ -59,16 +59,6 @@ impl SymbolTable {
     pub fn iter(&self) -> impl Iterator<Item = (&Symbol, &TableRow)> {
         self.0.iter()
     }
-
-    // pub fn to_section_data(&self) -> SectionData {
-    //     let mut section_data: SectionData = SectionData::Symbols(vec![]);
-    //
-    //     for (symbol, row) in &self.0 {
-    //         let _ = section_data.add_symbol(0, symbol.name.clone(), row.address.value, 0, 0, None);
-    //     }
-    //
-    //     section_data
-    // }
 }
 
 impl Default for SymbolTable {
@@ -114,6 +104,8 @@ impl Symbolizer {
                 {
                     self.change_section(label);
                     self.current_scope = Scope::Local;
+                } else if label.value == ".word" {
+                    self.addr += (4 * (tokens.len() - 1)) as u32;
                 }
             }
             if let Token::LABEL(label) = token {
@@ -122,6 +114,8 @@ impl Symbolizer {
                 self.add_symbol(symbol, address);
             }
         }
+
+        self.current_scope = Scope::Local;
 
         if tokens
             .iter()

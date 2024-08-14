@@ -1,11 +1,20 @@
 use std::collections::HashMap;
 
+use object::elf::{STB_GLOBAL, STT_NOTYPE};
+
 use crate::{
-    elf::{elf_writer::ElfWriter, section_data},
+    elf::{
+        elf_writer::ElfWriter,
+        section_data::{self, SectionData},
+    },
     lexer::{symbolizer::SymbolTable, Lexer},
     token::{Directive, Token},
     tokenizer::Tokenizer,
 };
+
+pub struct UnknownRefs {
+    pub refs: Vec<String>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Section {
@@ -35,6 +44,7 @@ pub struct Assembler {
     elf_writer: ElfWriter,
     buffer: Vec<u8>,
     section_lookup_table: SectionLookupTable,
+    unknown_refs: UnknownRefs,
 }
 
 impl Assembler {
@@ -47,8 +57,8 @@ impl Assembler {
             current_section: Section::Text,
             elf_writer: ElfWriter::new(),
             buffer: vec![],
-
             section_lookup_table: SectionLookupTable(HashMap::new()),
+            unknown_refs: UnknownRefs { refs: vec![] },
         }
     }
 
@@ -61,16 +71,40 @@ impl Assembler {
             let line = self.tokenizer.consume_line();
             self.parse_line(line);
         }
+
+        self.create_symbol_entry();
     }
 
     fn create_symbol_entry(&mut self) {
+        let mut section_data = SectionData::Symbols(vec![]);
         for symbol in self.symbol_table.iter() {
             let section_id = self
                 .section_lookup_table
                 .clone()
                 .0
                 .get(&symbol.1.section.to_string())
-                .unwrap();
+                .unwrap()
+                .to_owned();
+
+            section_data.add_symbol(
+                section_id.to_owned(),
+                symbol.0.name.clone(),
+                symbol.1.address.value,
+                0,
+                STT_NOTYPE,
+                None,
+            );
+        }
+
+        for unknown_ref in &self.unknown_refs.refs {
+            section_data.add_symbol(
+                0,
+                unknown_ref.to_owned(),
+                0,
+                0,
+                STB_GLOBAL << 4 | STT_NOTYPE,
+                Some(0),
+            );
         }
     }
 
@@ -95,6 +129,8 @@ impl Assembler {
                 self.change_section(directive);
             }
         }
+
+        self.find_unknown_refs(&line);
 
         if has_instruction(&line) {
             let op = self.lexer.parse_line(line).unwrap();
@@ -138,6 +174,17 @@ impl Assembler {
             ".bss" => self.current_section = Section::Bss,
             _ => panic!("Unknown section directive"),
         };
+    }
+
+    fn find_unknown_refs(&mut self, tokens: &[Token]) {
+        for token in tokens {
+            if let Token::LABELREF(label) = token {
+                let address = self.symbol_table.get_address(label);
+                if address.is_none() {
+                    self.unknown_refs.refs.push(label.clone());
+                }
+            }
+        }
     }
 }
 

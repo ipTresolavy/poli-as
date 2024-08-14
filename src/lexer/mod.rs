@@ -28,7 +28,7 @@ pub mod symbolizer;
 
 pub struct Lexer {
     symbol_table: SymbolTable,
-    addr: u32,
+    pub addr: u32,
 }
 
 impl Lexer {

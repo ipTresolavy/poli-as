@@ -153,7 +153,9 @@ fn replace_label_ref(tokens: &mut [Token], symbol_table: &SymbolTable, current_a
         if let Token::LABELREF(label) = token {
             let address = symbol_table.get_address(label);
             if address.is_none() {
-                panic!("Label {} not found in symbol table", label);
+                let immediate = Immediate::new(0.to_string()).unwrap();
+                *token = Token::IMMEDIATE(immediate);
+                return;
             }
 
             let immediate = Immediate::new(

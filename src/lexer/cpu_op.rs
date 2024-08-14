@@ -80,7 +80,7 @@ impl CpuOperation {
     }
 
     fn generate_b(&self) -> u32 {
-        let base: u32 = 0x0e000000;
+        let base: u32 = 0x0a000000;
 
         let link: u32 = match self.instruction.value {
             InstructionName::BL => 0x01000000,

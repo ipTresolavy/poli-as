@@ -12,20 +12,46 @@ pub mod token;
 pub mod tokenizer;
 pub mod utils;
 
+use clap::{Arg, Command};
+
 fn main() {
-    let reader = Reader::new("hello.txt");
+    let matches = Command::new("poli-as")
+        .version("1.0")
+        .author("Thiago Souza e Igor Pontes Tresolavy")
+        .about("Assembler para o armv7")
+        .arg(
+            Arg::new("input")
+                .short('i')
+                .long("input")
+                .value_name("FILE"),
+        )
+        .arg(
+            Arg::new("output")
+                .short('o')
+                .long("output")
+                .value_name("FILE"),
+        )
+        .get_matches();
 
-    let tokenizer = Tokenizer::new(reader);
+    let output_file_name = matches.get_one::<String>("output");
+    // Accessing values
+    if let Some(input) = matches.get_one::<String>("input") {
+        let reader = Reader::new(input);
 
-    let mut symbolizer = Symbolizer::new(tokenizer);
+        let tokenizer = Tokenizer::new(reader);
 
-    symbolizer.symbolize();
+        let mut symbolizer = Symbolizer::new(tokenizer);
 
-    let reader = Reader::new("hello.txt");
+        symbolizer.symbolize();
 
-    let tokenizer = Tokenizer::new(reader);
+        let reader = Reader::new("hello.txt");
 
-    let mut assembler = assembler::Assembler::new(tokenizer, symbolizer.symbol_table);
+        let tokenizer = Tokenizer::new(reader);
 
-    assembler.assemble();
+        let mut assembler = assembler::Assembler::new(tokenizer, symbolizer.symbol_table);
+
+        assembler.assemble(output_file_name);
+    } else {
+        println!("No input file provided");
+    }
 }

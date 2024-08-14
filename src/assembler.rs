@@ -78,7 +78,7 @@ impl Assembler {
         self.buffer.clear();
     }
 
-    pub fn assemble(&mut self) {
+    pub fn assemble(&mut self, output: Option<&String>) {
         while !self.tokenizer.is_eof() {
             let line = self.tokenizer.consume_line();
             self.parse_line(line);
@@ -87,7 +87,8 @@ impl Assembler {
 
         self.create_symbol_entry();
 
-        self.elf_writer.write_elf("out.o".to_string());
+        self.elf_writer
+            .write_elf(output.unwrap_or(&"a.out".to_owned()).to_owned())
     }
 
     fn parse_line(&mut self, line: Vec<Token>) {

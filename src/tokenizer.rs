@@ -11,6 +11,7 @@ use crate::{
     },
 };
 
+#[derive(Debug, Clone)]
 pub struct Tokenizer {
     reader: Reader,
 }

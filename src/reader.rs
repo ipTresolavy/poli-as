@@ -1,8 +1,18 @@
 use std::{fs::File, os::unix::fs::FileExt};
 
+#[derive(Debug)]
 pub struct Reader {
     file: File,
     position: u64,
+}
+
+impl Clone for Reader {
+    fn clone(&self) -> Self {
+        Reader {
+            file: self.file.try_clone().unwrap(),
+            position: self.position,
+        }
+    }
 }
 
 impl Reader {

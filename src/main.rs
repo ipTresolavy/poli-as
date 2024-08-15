@@ -40,13 +40,9 @@ fn main() {
 
         let tokenizer = Tokenizer::new(reader);
 
-        let mut symbolizer = Symbolizer::new(tokenizer);
+        let mut symbolizer = Symbolizer::new(tokenizer.clone());
 
         symbolizer.symbolize();
-
-        let reader = Reader::new("hello.txt");
-
-        let tokenizer = Tokenizer::new(reader);
 
         let mut assembler = assembler::Assembler::new(tokenizer, symbolizer.symbol_table);
 

@@ -87,6 +87,10 @@ impl Assembler {
 
         self.create_symbol_entry();
 
+        self.commit_elf(output);
+    }
+
+    fn commit_elf(&mut self, output: Option<&String>) {
         self.elf_writer
             .write_elf(output.unwrap_or(&"a.out".to_owned()).to_owned())
     }

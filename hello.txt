@@ -1,70 +1,40 @@
 .text
-main:
-    push    {r4, r5, r6, lr}
-    sub sp, sp, #20           
-    add     r0, sp, #0           
+fibonacci:
+    mov r0, #10
+    cmp r0, #0
+    beq zero_case
 
-    movs    r1, #20             
-    str     r1, [r0]
-    movs    r1, #10
-    str     r1, [r0, #4]
-    movs    r1, #30
-    str     r1, [r0, #8]
-    movs    r1, #5
-    str     r1, [r0, #12]
-    mov     r1, lr
-    str     r1, [r0, #16]
+    cmp r0, #1
+    beq one_case
 
-    mov     r0, sp             
-    movs    r1, #5            
+    mov r1, #0
+    mov r2, #1
 
-    bl      sort             
+    mov r3, #2
 
-    add     sp, sp, #20     
-    pop     {r4, r5, r6, pc} 
-	
-	mov r11, #10
-	
+loop:
+    cmp r3, r0     
+    bgt end_loop    
 
-sort:
-    push    {r4, r5, r6, lr} 
+    add r4, r1, r2    
+    mov r1, r2       
+    mov r2, r4         
 
-    movs    r2, #0               
+    add r3, r3, #1      
 
-loop_outer:
-    cmp     r2, r1                
-    bge     exit_sort             
+    b loop         
 
-    mov     r3, r2              
-    sub     r3, r3, #1         
+end_loop:
+    mov r0, r2      
+    b end;
 
-loop_inner:
-    cmp     r3, #0            
-    blt     update_i         
+zero_case:
+    mov r0, #0         
+    b end
 
-    lsl     r4, r3, #2      
-    add     r4, r0, r4     
-    ldr     r5, [r4]      
-    ldr     r6, [r4, #4]  
+one_case:
+    mov r0, #1          
+    b end
 
-    cmp     r5, r6       
-    blt     update_j    
-
-    bl      swap
-
-update_j:
-    subs    r3, r3, #1 
-    b       loop_inner
-
-update_i:
-    adds    r2, r2, #1
-    b       loop_outer
-
-swap:
-    str     r6, [r4]              
-    str     r5, [r4, #4]          
-    bx      lr                   
-
-exit_sort:
-    pop     {r4, r5, r6, lr}    
-    bx      lr
+end: 
+  b end

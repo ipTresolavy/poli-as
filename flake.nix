@@ -35,6 +35,7 @@
             pkg-config
             lazygit
             gcc-arm-embedded-13
+            qemu
           ]);
         RUST_BACKTRACE = 1;
       };

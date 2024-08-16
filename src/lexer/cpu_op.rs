@@ -95,7 +95,7 @@ impl CpuOperation {
             _ => panic!("Expected register"),
         };
 
-        base | imm
+        base | (imm & 0x00ffffff)
     }
 
     fn generate_proc(&self) -> u32 {
@@ -111,7 +111,7 @@ impl CpuOperation {
 
         let base = base | (proc_opcode << 21);
 
-        let expression = get_proc_expression(&self.expression);
+        let expression = get_proc_expression(&self.expression, &self.instruction.value);
 
         base | expression
     }
@@ -329,10 +329,10 @@ fn is_load_store(instruction: &Instruction) -> bool {
     )
 }
 
-fn get_proc_expression(expression: &Expression) -> u32 {
+fn get_proc_expression(expression: &Expression, name: &InstructionName) -> u32 {
     match expression {
         Expression::ThreeRegs(expr) => expr.to_machine_code(),
-        Expression::TwoRegs(expr) => expr.to_machine_code(),
+        Expression::TwoRegs(expr) => expr.to_machine_code(name),
         Expression::TwoRegsLiteral(expr) => expr.to_machine_code(),
         Expression::RegLiteral(expr) => expr.to_machine_code(),
         _ => panic!("Invalid expression"),

@@ -15,7 +15,11 @@ impl Instruction {
     ) -> Option<Instruction> {
         let value = InstructionName::from_name(operation)?;
 
-        let save_register = matches!(set_flags, Some("s"));
+        let save_register = if matches!(value, InstructionName::CMP | InstructionName::CMN) {
+            true
+        } else {
+            matches!(set_flags, Some("s"))
+        };
 
         let condition = match condition {
             Some(c) => ConditionCode::from_name(c)?,

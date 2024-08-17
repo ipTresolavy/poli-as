@@ -45,7 +45,6 @@ impl Tokenizer {
     }
 
     fn split_at_separators(&self, line: &str) -> Vec<String> {
-        // Another day another regex i want to kill myself over
         let re = Regex::new(r"(r\d+)|(\{|\})|(\[|\])|(-)|(!)|(=)|(\.[a-zA-Z]+)|(#0x\d+|#0b\d+|#0d\d+|#-?\d+)|(0x\d+|0b\d+|0d\d+|-?\d+)|([a-zA-Z\_\-]+:)|([a-zA-Z\_\-]+)").unwrap();
         let matches: Vec<String> = re
             .captures_iter(line)
